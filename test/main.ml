@@ -24,10 +24,14 @@ let size_test (name : string) (d : Deck.t) (expected_output : int) : test =
 
 let test_card_1 = init_card Ace Diamonds [ 1; 11 ]
 let test_card_2 = init_card (Number 2) Spades [ 2 ]
+let test_card_3 = init_card (Number 3) Clubs [ 3 ]
 let test_empty = empty
 let test_standard = standard
 let test_add_on_empty = add empty test_card_1
 let test_add_on_1card = add test_add_on_empty test_card_2
+let test_another_1card_deck = add empty test_card_3
+let test_combine_empty = combine empty test_another_1card_deck
+let test_combine_nonempty = combine test_another_1card_deck test_add_on_1card
 
 let card_tests =
   [
@@ -68,14 +72,20 @@ let deck_tests =
        Diamonds, [6]) (Number 7, Diamonds, [7]) (Number 8, Diamonds, [8]) \
        (Number 9, Diamonds, [9]) (Number 10, Diamonds, [10]) (Jack, Diamonds, \
        [10]) (Queen, Diamonds, [10]) (King, Diamonds, [10]) ";
-    string_of_deck_test "card add test empty" test_add_on_empty
+    string_of_deck_test "add test empty" test_add_on_empty
       "(Ace, Diamonds, [1; 11]) ";
-    string_of_deck_test "card add test 1card already" test_add_on_1card
+    string_of_deck_test "add test 1card already" test_add_on_1card
       "(Number 2, Spades, [2]) (Ace, Diamonds, [1; 11]) ";
+    string_of_deck_test "combine test empty + 1card" test_combine_empty
+      "(Number 3, Clubs, [3]) ";
+    string_of_deck_test "combine test 1 card + 1 card" test_combine_nonempty
+      "(Number 2, Spades, [2]) (Ace, Diamonds, [1; 11]) (Number 3, Clubs, [3]) ";
     size_test "size of empty is 0" test_empty 0;
     size_test "size of standard is 52" test_standard 52;
     size_test "size of empty+1 is 1" test_add_on_empty 1;
     size_test "size of 1card + 1 is 2" test_add_on_1card 2;
+    size_test "combine empty w/1card-deck = 1" test_combine_empty 1;
+    size_test "combine 1card-deck w/2card-deck = 3" test_combine_nonempty 3;
   ]
 
 let suite =
