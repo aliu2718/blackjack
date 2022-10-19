@@ -41,3 +41,6 @@ val draw : t -> int -> Card.t * t
     Requires: n is non-negative.
 
     Raises: [EmptyDeck] if [d] is an empty deck and [n] > 0. *)
+
+val string_of_deck : t -> string
+(** [string_of_deck d] is a string representation of the playing card deck [d]. *)

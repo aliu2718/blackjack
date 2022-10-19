@@ -14,7 +14,11 @@ let string_of_card_test (name : string) (c : Card.t) (expected_output : string)
   name >:: fun _ ->
   assert_equal expected_output (string_of_card c) ~printer:Fun.id
 
+let empty_test (name : string) (expected_output : Deck.t) : test =
+  name >:: fun _ -> assert_equal expected_output empty ~printer:string_of_deck
+
 let test_card_1 = init_card Ace Diamonds [ 1; 11 ]
+let test_empty = empty
 
 let card_tests =
   [
@@ -33,7 +37,10 @@ let command_tests =
          ];
   ]
 
+let deck_tests = [ empty_test "Empty constructor test" test_empty ]
+
 let suite =
-  "test suite for final project" >::: List.flatten [ card_tests; command_tests ]
+  "test suite for final project"
+  >::: List.flatten [ card_tests; command_tests; deck_tests ]
 
 let _ = run_test_tt_main suite
