@@ -15,6 +15,23 @@ let test_add_on_1card = add test_add_on_empty test_card_2
 
 (* ########################### CARD TESTS ################################### *)
 
+(** [string_of_int_list lst] is the string representation of list [lst]. *)
+let rec string_of_int_list lst =
+  "[" ^ String.concat "; " (List.map string_of_int lst) ^ "]"
+
+(** [values_test name c expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with [Card.values c]. *)
+let values_test (name : string) (c : Card.t) (expected_output : int list) : test
+    =
+  name >:: fun _ ->
+  assert_equal expected_output (values c) ~printer:string_of_int_list
+
+let values_tests =
+  [
+    values_test "2 of Spades" test_card_2 [ 2 ];
+    values_test "Ace of Diamonds" test_card_1 [ 1; 11 ];
+  ]
+
 (** [string_of_card_test name c expected_output] constructs an OUnit test named
     [name] that asserts the quality of [expected_output] with
     [Card.string_of_card c]. *)
@@ -29,7 +46,7 @@ let string_of_card_tests =
     string_of_card_test "2 of Spades" test_card_2 "2 of Spades";
   ]
 
-let card_tests = List.flatten [ string_of_card_tests ]
+let card_tests = List.flatten [ values_tests; string_of_card_tests ]
 
 (* ######################## COMMAND TESTS ################################### *)
 
