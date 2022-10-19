@@ -61,7 +61,7 @@ let standard : t =
   ]
 
 let size (d : t) : int = List.length d
-let add d c = raise (Failure "Unimplemented: Deck.add")
+let add (d : t) (c : Card.t) : t = [ c ] @ d
 let combine d1 d2 = raise (Failure "Unimplemented: Deck.combine")
 let shuffle d = raise (Failure "Unimplemented: Deck.shuffle")
 
