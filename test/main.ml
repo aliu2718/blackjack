@@ -8,6 +8,7 @@ open Deck
 
 let test_card_1 = init_card Ace Diamonds [ 1; 11 ]
 let test_card_2 = init_card (Number 2) Spades [ 2 ]
+let test_ace_of_spades = init_card Ace Spades [ 1; 11 ]
 let test_empty = empty
 let test_standard = standard
 let test_add_on_empty = add empty test_card_1
@@ -159,7 +160,25 @@ let size_tests =
     size_test "size of two card deck" test_add_on_1card 2;
   ]
 
-let deck_tests = List.flatten [ string_of_deck_tests; size_tests ]
+(** [peek_test name d expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with [Deck.peek d]. *)
+let peek_test (name : string) (d : Deck.t) (expected_output : Card.t) : test =
+  name >:: fun _ ->
+  assert_equal expected_output (peek d) ~printer:string_of_card
+
+(** [peek_fail_test name d] constructs an OUnit test named [name] that asserts
+    that exception [EmptyDeck] is raised by [Deck.peek d]. *)
+let peek_fail_test (name : string) (d : Deck.t) : test =
+  name >:: fun _ -> assert_raises EmptyDeck (fun () -> peek d)
+
+let peek_tests =
+  [
+    peek_test "standard deck" standard test_ace_of_spades;
+    peek_test "peeking 2 of spades" test_add_on_1card test_card_2;
+    peek_fail_test "peeking empty deck" empty;
+  ]
+
+let deck_tests = List.flatten [ string_of_deck_tests; size_tests; peek_tests ]
 
 (* ########################## TEST SUITE #################################### *)
 

@@ -67,7 +67,7 @@ let shuffle d = raise (Failure "Unimplemented: Deck.shuffle")
 
 exception EmptyDeck
 
-let peek d = raise (Failure "Unimplemented: Deck.peek")
+let peek d = if size d = 0 then raise EmptyDeck else List.hd d
 let draw d n = raise (Failure "Unimplemented: Deck.draw")
 
 let rec string_of_deck d =
