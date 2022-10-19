@@ -11,10 +11,14 @@ type suit =
   | Spades
   | Clubs
 
-type t = unit
+type t = {
+  rank : rank;
+  suit : suit;
+  values : int list;
+}
 
-let init_card r s v = raise (Failure "Unimplemented: Card.init_card")
-let rank c = raise (Failure "Unimplemented: Card.rank")
-let suit c = raise (Failure "Unimplemented: Card.suit")
-let values c = raise (Failure "Unimplemented: Card.values")
+let init_card r s v = { rank = r; suit = s; values = v }
+let rank c = c.rank
+let suit c = c.suit
+let values c = c.values
 let string_of_card c = raise (Failure "Unimplemented: Card.string_of_card")
