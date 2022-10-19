@@ -25,7 +25,7 @@ val parse : string -> command
     the action. The following integer, if any, becomes the integer amount.
     Examples:
 
-    - [parse "    bet   500   "] is [Go 500]
+    - [parse "    bet   500   "] is [Bet 500]
     - [parse "deposit   32"] is [Deposit 32]
     - [parse "      double"] is [Double]
     - [parse "quit"] is [Quit]
