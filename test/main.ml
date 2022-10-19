@@ -8,11 +8,15 @@ open Deck
 
 let test_card_1 = init_card Ace Diamonds [ 1; 11 ]
 let test_card_2 = init_card (Number 2) Spades [ 2 ]
+let test_card_3 = init_card (Number 3) Clubs [ 3 ]
 let test_ace_of_spades = init_card Ace Spades [ 1; 11 ]
 let test_empty = empty
 let test_standard = standard
 let test_add_on_empty = add empty test_card_1
 let test_add_on_1card = add test_add_on_empty test_card_2
+let test_another_1card_deck = add empty test_card_3
+let test_combine_empty = combine empty test_another_1card_deck
+let test_combine_nonempty = combine test_another_1card_deck test_add_on_1card
 
 (* ########################### CARD TESTS ################################### *)
 

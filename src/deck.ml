@@ -62,7 +62,7 @@ let standard : t =
 
 let size (d : t) : int = List.length d
 let add (d : t) (c : Card.t) : t = c :: d
-let combine d1 d2 = raise (Failure "Unimplemented: Deck.combine")
+let combine (d1 : t) (d2 : t) : t = d2 @ d1
 let shuffle d = raise (Failure "Unimplemented: Deck.shuffle")
 
 exception EmptyDeck
