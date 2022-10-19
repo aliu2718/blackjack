@@ -11,4 +11,15 @@ type command =
 exception Empty
 exception Malformed
 
-let parse str = raise (Failure "Unimplemented: Command.parse")
+let rec remove_whitespace = function
+  | [] -> []
+  | h :: t -> if h = "" then remove_whitespace t else h :: remove_whitespace t
+
+let strlist_to_int t = String.concat "" t |> int_of_string
+
+let parse str =
+  match String.split_on_char ' ' str |> remove_whitespace with
+  | [] -> raise Empty
+  | [ "hit" ] -> Hit
+  | [ "stand" ] -> Stand
+  | h :: t -> if h = "bet" then Bet (strlist_to_int t) else raise Malformed
