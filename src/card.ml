@@ -24,7 +24,7 @@ let values c = c.values
 
 let string_of_rank = function
   | Ace -> "Ace"
-  | Number int -> "Number " ^ string_of_int int
+  | Number int -> string_of_int int
   | Jack -> "Jack"
   | Queen -> "Queen"
   | King -> "King"
@@ -38,7 +38,4 @@ let string_of_suit = function
 let rec string_of_int_list values =
   "[" ^ String.concat "; " (List.map string_of_int values) ^ "]"
 
-let string_of_card c =
-  "(" ^ string_of_rank c.rank ^ ", " ^ string_of_suit c.suit ^ ", "
-  ^ string_of_int_list c.values
-  ^ ")"
+let string_of_card c = string_of_rank c.rank ^ " of " ^ string_of_suit c.suit

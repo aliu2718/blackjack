@@ -61,7 +61,7 @@ let standard : t =
   ]
 
 let size (d : t) : int = List.length d
-let add (d : t) (c : Card.t) : t = [ c ] @ d
+let add (d : t) (c : Card.t) : t = c :: d
 let combine d1 d2 = raise (Failure "Unimplemented: Deck.combine")
 let shuffle d = raise (Failure "Unimplemented: Deck.shuffle")
 
@@ -73,4 +73,5 @@ let draw d n = raise (Failure "Unimplemented: Deck.draw")
 let rec string_of_deck d =
   match d with
   | [] -> ""
-  | h :: t -> Card.string_of_card h ^ " " ^ string_of_deck t
+  | [ h ] -> Card.string_of_card h
+  | h :: t -> Card.string_of_card h ^ ", " ^ string_of_deck t

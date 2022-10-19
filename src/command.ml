@@ -29,4 +29,5 @@ let parse str =
   | [] -> raise Empty
   | [ "hit" ] -> Hit
   | [ "stand" ] -> Stand
+  | [ "quit" ] -> Quit
   | h :: t -> if h = "bet" then Bet (extract_int t) else raise Malformed
