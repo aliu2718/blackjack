@@ -10,8 +10,6 @@ let test_card_1 = init_card Ace Diamonds [ 1; 11 ]
 let test_card_2 = init_card (Number 2) Spades [ 2 ]
 let test_card_3 = init_card (Number 3) Clubs [ 3 ]
 let test_ace_of_spades = init_card Ace Spades [ 1; 11 ]
-let test_empty = empty
-let test_standard = standard
 let test_add_on_empty = add empty test_card_1
 let test_add_on_1card = add test_add_on_empty test_card_2
 let test_another_1card_deck = add empty test_card_3
@@ -143,8 +141,8 @@ let standard_string =
 
 let string_of_deck_tests =
   [
-    string_of_deck_test "empty val test" test_empty "";
-    string_of_deck_test "standard val test" test_standard standard_string;
+    string_of_deck_test "empty val test" empty "";
+    string_of_deck_test "standard val test" standard standard_string;
     string_of_deck_test "card add test empty" test_add_on_empty
       "Ace of Diamonds";
     string_of_deck_test "card add test 1card already" test_add_on_1card
@@ -158,10 +156,28 @@ let size_test (name : string) (d : Deck.t) (expected_output : int) : test =
 
 let size_tests =
   [
-    size_test "size of empty is 0" test_empty 0;
-    size_test "size of standard is 52" test_standard 52;
+    size_test "size of empty is 0" empty 0;
+    size_test "size of standard is 52" standard 52;
     size_test "size of one card deck" test_add_on_empty 1;
     size_test "size of two card deck" test_add_on_1card 2;
+  ]
+
+(** [combine_test] constructs an OUnit test named [name] that asserts the
+    quality of [expected_output] with [Deck.combine d1 d2]. *)
+let combine_test (name : string) (d1 : Deck.t) (d2 : Deck.t)
+    (expected_output : string) : test =
+  name >:: fun _ ->
+  assert_equal expected_output (string_of_deck (combine d1 d2)) ~printer:Fun.id
+
+let combine_tests =
+  [
+    combine_test "combine two empty decks" empty empty "";
+    combine_test "put nonempty deck on empty deck" empty standard
+      standard_string;
+    combine_test "put empty deck on nonempty deck" standard empty
+      standard_string;
+    combine_test "combine nonempty decks" standard standard
+      (standard_string ^ ", " ^ standard_string);
   ]
 
 (** [peek_test name d expected_output] constructs an OUnit test named [name]
@@ -182,7 +198,8 @@ let peek_tests =
     peek_fail_test "peeking empty deck" empty;
   ]
 
-let deck_tests = List.flatten [ string_of_deck_tests; size_tests; peek_tests ]
+let deck_tests =
+  List.flatten [ string_of_deck_tests; size_tests; combine_tests; peek_tests ]
 
 (* ########################## TEST SUITE #################################### *)
 
