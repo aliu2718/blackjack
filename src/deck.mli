@@ -23,7 +23,9 @@ val combine : t -> t -> t
 (** [combine d1 d2] is the resulting deck after putting [d2] on the top of [d1]. *)
 
 val shuffle : t -> t
-(** [shuffle d] is deck [d] with all cards shuffled to a random order. *)
+(** [shuffle d] is deck [d] with all cards shuffled to a random order. The
+    Fisher-Yates shuffle algorithm is used to generate a random permutation of
+    the cards in [d]. *)
 
 exception EmptyDeck
 (** Raised when attempting to interact with a card in an empty deck. *)

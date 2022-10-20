@@ -1,4 +1,6 @@
 open Card
+open Array
+open Random
 
 type t = Card.t list
 
@@ -63,7 +65,17 @@ let standard : t =
 let size (d : t) : int = List.length d
 let add (d : t) (c : Card.t) : t = c :: d
 let combine (d1 : t) (d2 : t) : t = d2 @ d1
-let shuffle d = raise (Failure "Unimplemented: Deck.shuffle")
+
+let shuffle d =
+  let d_arr = Array.of_list d in
+  let d_size = size d in
+  for i = d_size - 1 downto 1 do
+    let j = Random.int (i + 1) in
+    let temp = d_arr.(j) in
+    d_arr.(j) <- d_arr.(i);
+    d_arr.(i) <- temp
+  done;
+  d_arr |> Array.to_list
 
 exception EmptyDeck
 

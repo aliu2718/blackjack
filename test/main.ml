@@ -245,6 +245,39 @@ let draw_tests =
     draw_fail_test "drawing from empty deck" empty;
   ]
 
+(** [shuffled_decks_generator] is a list of [n] randomly shuffled copies of deck
+    [d]. Invariant: [n] > 0. *)
+let shuffled_decks_generator n d =
+  Array.make n d |> Array.to_list |> List.map shuffle
+
+(** [shuffle_test name d n expected_output] constructs an OUnit test named
+    [name] that asserts whether [d] is expected to appear in [n] randomly
+    shuffled copies of [d]. This test leverages the fact that for a sufficiently
+    large deck and for a sufficiently small [n], the probability of
+    [Deck.shuffle d] being identical to [d] is extraordinarily unlikely:
+
+    - For a standard 52-card deck, the probability of a shuffled copy of [d]
+      having the same card ordering as [d] is on the order of O(n * 10 ^ -68).
+
+    However, for deck sizes of 0 or 1, [Deck.shuffle d] is equal to [d].
+    Invariant: [n] > 0. *)
+let shuffle_test (name : string) (d : Deck.t) (n : int) (expected_output : bool)
+    : test =
+  let shuffled_decks = shuffled_decks_generator n d in
+  name >:: fun _ ->
+  assert_equal expected_output
+    (List.mem d shuffled_decks)
+    ~printer:string_of_bool
+
+let shuffle_tests =
+  [
+    shuffle_test "empty deck" empty 1 true;
+    shuffle_test "1-card deck" test_add_on_empty 1 true;
+    shuffle_test "1 randomly shuffled standard deck" standard 1 false;
+    shuffle_test "100 randomly shuffled standard decks" standard 100 false;
+    shuffle_test "1000 randomly shuffled standard decks" standard 1000 false;
+  ]
+
 let deck_tests =
   List.flatten
     [
@@ -254,6 +287,7 @@ let deck_tests =
       peek_tests;
       add_tests;
       draw_tests;
+      shuffle_tests;
     ]
 
 (* ########################## TEST SUITE #################################### *)
