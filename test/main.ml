@@ -198,8 +198,23 @@ let peek_tests =
     peek_fail_test "peeking empty deck" empty;
   ]
 
+(** [add_test name d c expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with [Deck.add d c]. *)
+let add_test (name : string) (d : Deck.t) (c : Card.t)
+    (expected_output : Card.t) : test =
+  name >:: fun _ ->
+  assert_equal expected_output (peek (add d c)) ~printer:string_of_card
+
+let add_tests =
+  [
+    add_test "add to empty deck" empty test_ace_of_spades test_ace_of_spades;
+    add_test "add to standard deck" standard test_card_1 test_card_1;
+    add_test "add to one card deck" test_add_on_empty test_card_2 test_card_2;
+  ]
+
 let deck_tests =
-  List.flatten [ string_of_deck_tests; size_tests; combine_tests; peek_tests ]
+  List.flatten
+    [ string_of_deck_tests; size_tests; combine_tests; peek_tests; add_tests ]
 
 (* ########################## TEST SUITE #################################### *)
 
