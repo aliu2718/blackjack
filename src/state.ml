@@ -70,4 +70,9 @@ type value =
   | Value of int
 
 let val_hand h = raise (Failure "Unimplemented: State.val_hand")
-let string_of_hand h = raise (Failure "Unimplemented: State.string_of_hand")
+
+let rec string_of_hand h =
+  match h with
+  | [] -> "There are no cards in the hand."
+  | [ c ] -> Card.string_of_card c
+  | c :: t -> Card.string_of_card c ^ ", " ^ string_of_hand t

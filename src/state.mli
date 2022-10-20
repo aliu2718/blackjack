@@ -102,4 +102,6 @@ val val_hand : h -> int
     - If [h] is a Blackjack, then the result is [Blackjack]. *)
 
 val string_of_hand : h -> string
-(** [string_of_hand h] is the string representation of hand [h]. *)
+(** [string_of_hand h] is the string representation of hand [h]. If there are no
+    cards in [h], the resulting string is "There are no cards in the hand." This
+    is a user-friendly string to display to the player. *)
