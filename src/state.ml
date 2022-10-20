@@ -34,7 +34,8 @@ let init_state =
   }
 
 let start_round st = raise (Failure "Unimplemented: State.init_play")
-let add_deck d = raise (Failure "Unimplemented: State.add_deck")
+let add_deck st d = { st with deck = d |> combine st.deck |> shuffle }
+let deck_size st = size st.deck
 let balance st = raise (Failure "Unimplemented: State.balance")
 let bet st n = raise (Failure "Unimplemented: State.bet")
 let deposit st n = raise (Failure "Unimplemented: State.deposit")

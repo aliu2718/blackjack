@@ -29,6 +29,9 @@ val add_deck : t -> Deck.t -> t
 (** [add_deck st d] adds [d] to the top of the current deck in [st], then
     shuffles the combined deck. *)
 
+val deck_size : t -> int
+(** [deck_size st] is the number of playing cards in the current deck in [st]. *)
+
 val balance : t -> int
 (** [balance st] is the current player balance. *)
 

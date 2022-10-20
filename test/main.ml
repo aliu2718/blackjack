@@ -321,7 +321,35 @@ let dealer_hand_test (name : string) (st : State.t) (expected_output : int) :
 let dealer_hand_tests =
   [ dealer_hand_test "initial primitive state" init_state 0 ]
 
-let state_tests = List.flatten [ current_hand_tests; dealer_hand_tests ]
+(** [add_deck_test name st d expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with
+    [State.deck_size (State.add_deck st d)]. Since the order of the cards in a
+    deck are random, [State.add_deck st d] is tested against the expected deck
+    size. *)
+let add_deck_test (name : string) (st : State.t) (d : Deck.t)
+    (expected_output : int) : test =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (deck_size (add_deck st d))
+    ~printer:string_of_int
+
+let standard_state = standard |> add_deck init_state
+
+let add_deck_tests =
+  [
+    add_deck_test "add empty deck to initial primitive state" init_state empty 0;
+    add_deck_test "add 1-card deck to initial primitive state" init_state
+      test_add_on_empty 1;
+    add_deck_test "add standard deck to initial primitive state" init_state
+      standard 52;
+    add_deck_test "add empty deck to state with nonempty deck" standard_state
+      empty 52;
+    add_deck_test "add nonempty deck to state with nonempty deck" standard_state
+      standard 104;
+  ]
+
+let state_tests =
+  List.flatten [ current_hand_tests; dealer_hand_tests; add_deck_tests ]
 
 (* ########################## TEST SUITE #################################### *)
 
