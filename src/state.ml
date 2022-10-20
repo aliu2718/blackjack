@@ -21,7 +21,6 @@ type t = {
 
 exception IllegalAction
 
-(** [empty_hand] is a hand with no cards. *)
 let empty_hand = []
 
 let init_state =
