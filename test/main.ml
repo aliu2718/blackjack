@@ -307,7 +307,21 @@ let current_hand_test (name : string) (st : State.t) (expected_output : int) :
 let current_hand_tests =
   [ current_hand_test "initial primitive state" init_state 0 ]
 
-let state_tests = List.flatten [ current_hand_tests ]
+(** [dealer_hand_test name st expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with
+    [State.hand_size (State.dealer_hand st)]. Since the cards in a hand are
+    random, [State.dealer_hand st] is tested against the expected hand length. *)
+let dealer_hand_test (name : string) (st : State.t) (expected_output : int) :
+    test =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (hand_size (dealer_hand st))
+    ~printer:string_of_int
+
+let dealer_hand_tests =
+  [ dealer_hand_test "initial primitive state" init_state 0 ]
+
+let state_tests = List.flatten [ current_hand_tests; dealer_hand_tests ]
 
 (* ########################## TEST SUITE #################################### *)
 
