@@ -66,6 +66,8 @@ let size (d : t) : int = List.length d
 let add (d : t) (c : Card.t) : t = c :: d
 let combine (d1 : t) (d2 : t) : t = d2 @ d1
 
+(* Fisher-Yates Shuffle
+   https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle *)
 let shuffle d =
   let d_arr = Array.of_list d in
   let d_size = size d in

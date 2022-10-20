@@ -1,9 +1,40 @@
-type h = unit
-type t = unit
+open Deck
+
+(** A type for representing the current turn. [Dealer] corresponds to the
+    dealer's turn, [Player] corresponds to the player's turn playing their
+    primary hand, and [PlayerSplit] corresponds to the player's turn playing
+    their secondary hand resulting from the action of splitting. *)
+type turn =
+  | Dealer
+  | Player
+  | PlayerSplit
+
+type h = Card.t list
+
+type t = {
+  deck : Deck.t;
+  dealer_hand : h;
+  player_hands : h * h;
+  curr_turn : turn;
+  curr_hand : h;
+}
 
 exception IllegalAction
 
-let init_state = raise (Failure "Unimplemented: State.init_state")
+(** [empty_hand] is a hand with no cards. *)
+let empty_hand = []
+
+let init_state =
+  {
+    deck = empty;
+    dealer_hand = empty_hand;
+    player_hands = (empty_hand, empty_hand);
+    curr_turn = Player;
+    curr_hand = empty_hand;
+  }
+
+let start_round st = raise (Failure "Unimplemented: State.init_play")
+let add_deck d = raise (Failure "Unimplemented: State.add_deck")
 let balance st = raise (Failure "Unimplemented: State.balance")
 let bet st n = raise (Failure "Unimplemented: State.bet")
 let deposit st n = raise (Failure "Unimplemented: State.deposit")

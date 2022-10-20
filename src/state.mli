@@ -13,9 +13,21 @@ type t
 exception IllegalAction
 (** Raised when an illegal action is taken in the Blackjack game state. *)
 
+val empty_hand : h
+(** [empty_hand] is a hand with no cards. *)
+
 val init_state : t
 (** [init_state] is the primitive Blackjack game state with no current hands, an
     empty deck, zero balance, and no bets. *)
+
+val start_round : t -> t
+(** [start_round st] is a new round of Blackjack with the player first receiving
+    two cards from the top of the deck, then the dealer receiving one card from
+    the top of the deck. *)
+
+val add_deck : t -> Deck.t -> t
+(** [add_deck st d] adds [d] to the top of the current deck in [st], then
+    shuffles the combined deck. *)
 
 val balance : t -> int
 (** [balance st] is the current player balance. *)

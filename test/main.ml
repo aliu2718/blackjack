@@ -290,6 +290,10 @@ let deck_tests =
       shuffle_tests;
     ]
 
+(* ########################## STATE TESTS ################################### *)
+
+let state_tests = List.flatten []
+
 (* ########################## TEST SUITE #################################### *)
 
 let suite =
