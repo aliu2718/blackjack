@@ -33,10 +33,10 @@ val peek : t -> Card.t
 
     Raises: [EmptyDeck] if [d] is an empty deck. *)
 
-val draw : t -> int -> Card.t * t
-(** [draw d n] is the pair consisting of the top [n] cards of [d] and the new
-    deck with those top cards removed. Essentially, [n] cards are drawn from the
-    top of [d] to result in a new deck.
+val draw : t -> Card.t * t
+(** [draw d] is the pair consisting of the top card of [d] and the new deck with
+    the top card removed. Essentially, a card is drawn from the top of [d] to
+    result in a new deck, and the drawn card is recorded.
 
     Requires: n is non-negative.
 

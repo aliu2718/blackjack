@@ -212,9 +212,49 @@ let add_tests =
     add_test "add to one card deck" test_add_on_empty test_card_2 test_card_2;
   ]
 
+(** [draw_test name d expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with [Deck.draw d]. *)
+let draw_test (name : string) (d : Deck.t) (expected_output : Card.t * Deck.t) :
+    test =
+  name >:: fun _ -> assert_equal expected_output (draw d)
+
+(** [draw_test name d expected_output] constructs an OUnit test named [name]
+    that asserts the quality of the equation specification of [Deck.draw d],
+    namely:
+
+    - If Deck.draw d = (c, d'), then Deck.add d' c = d. *)
+let draw_eq_test (name : string) (d : Deck.t) : test =
+  name >:: fun _ ->
+  assert_equal d
+    (let c, d' = draw d in
+     add d' c)
+    ~printer:string_of_deck
+
+(** [draw_fail_test name d] constructs an OUnit test named [name] that asserts
+    that exception [EmptyDeck] is raised by [Deck.draw d]. *)
+let draw_fail_test (name : string) (d : Deck.t) : test =
+  name >:: fun _ -> assert_raises EmptyDeck (fun () -> draw d)
+
+let draw_tests =
+  [
+    draw_test "draw from one card deck" test_add_on_empty (test_card_1, empty);
+    draw_test "draw from two card deck" test_add_on_1card
+      (test_card_2, test_add_on_empty);
+    draw_eq_test "standard deck equation specification" standard;
+    draw_eq_test "1-card deck equation specification" test_another_1card_deck;
+    draw_fail_test "drawing from empty deck" empty;
+  ]
+
 let deck_tests =
   List.flatten
-    [ string_of_deck_tests; size_tests; combine_tests; peek_tests; add_tests ]
+    [
+      string_of_deck_tests;
+      size_tests;
+      combine_tests;
+      peek_tests;
+      add_tests;
+      draw_tests;
+    ]
 
 (* ########################## TEST SUITE #################################### *)
 
