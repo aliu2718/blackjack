@@ -1,3 +1,4 @@
+open Card
 open Deck
 
 (** A type for representing the current turn. [Dealer] corresponds to the
@@ -38,7 +39,7 @@ let balance st = raise (Failure "Unimplemented: State.balance")
 let bet st n = raise (Failure "Unimplemented: State.bet")
 let deposit st n = raise (Failure "Unimplemented: State.deposit")
 let current_bet st = raise (Failure "Unimplemented: State.current_bet")
-let current_hand st = raise (Failure "Unimplemented: State.current_hand")
+let current_hand st = st.curr_hand
 let player_hands st = raise (Failure "Unimplemented: State.player_hands")
 let dealer_hand st = raise (Failure "Unimplemented: State.dealer_hand")
 let hit st = raise (Failure "Unimplemented: State.hit")
@@ -46,6 +47,7 @@ let stand st = raise (Failure "Unimplemented: State.stand")
 let double st = raise (Failure "Unimplemented: State.double")
 let split st = raise (Failure "Unimplemented: State.split")
 let surrender st = raise (Failure "Unimplemented: State.surrender")
+let hand_size h = List.length h
 
 type value =
   | Blackjack

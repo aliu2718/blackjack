@@ -5,6 +5,7 @@ open Blackjack
 open Card
 open Command
 open Deck
+open State
 
 let test_card_1 = init_card Ace Diamonds [ 1; 11 ]
 let test_card_2 = init_card (Number 2) Spades [ 2 ]
@@ -292,12 +293,26 @@ let deck_tests =
 
 (* ########################## STATE TESTS ################################### *)
 
-let state_tests = List.flatten []
+(** [current_hand_test name st expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with
+    [State.hand_size (State.current_hand st)]. Since the cards in a hand are
+    random, [State.current_hand st] is tested against the expected hand length. *)
+let current_hand_test (name : string) (st : State.t) (expected_output : int) :
+    test =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (hand_size (current_hand st))
+    ~printer:string_of_int
+
+let current_hand_tests =
+  [ current_hand_test "initial primitive state" init_state 0 ]
+
+let state_tests = List.flatten [ current_hand_tests ]
 
 (* ########################## TEST SUITE #################################### *)
 
 let suite =
   "test suite for final project"
-  >::: List.flatten [ card_tests; command_tests; deck_tests ]
+  >::: List.flatten [ card_tests; command_tests; deck_tests; state_tests ]
 
 let _ = run_test_tt_main suite

@@ -79,6 +79,9 @@ val surrender : t -> t
     current hand. Half of the current bet, rounded up, is forfeited, and the
     current hand ends immediately. *)
 
+val hand_size : h -> int
+(** [hand_size h] is the number of cards in hand [h]. *)
+
 (** The type representing the best value of a Blackjack hand. *)
 type value =
   | Blackjack
