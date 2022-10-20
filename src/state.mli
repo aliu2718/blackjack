@@ -20,17 +20,19 @@ val init_state : t
 (** [init_state] is the primitive Blackjack game state with no current hands, an
     empty deck, zero balance, and no bets. *)
 
-val start_round : t -> t
-(** [start_round st] is a new round of Blackjack with the player first receiving
-    two cards from the top of the deck, then the dealer receiving one card from
-    the top of the deck. *)
-
 val add_deck : t -> Deck.t -> t
 (** [add_deck st d] adds [d] to the top of the current deck in [st], then
     shuffles the combined deck. *)
 
 val deck_size : t -> int
 (** [deck_size st] is the number of playing cards in the current deck in [st]. *)
+
+val start_round : t -> t
+(** [start_round st] is a new round of Blackjack with the player first receiving
+    two cards from the top of the deck, then the dealer receiving one card from
+    the top of the deck. If there are not enough cards in the deck to start the
+    round, a standard 52-card deck is added to the existing deck (with
+    shuffling) prior to distributing the cards to the hands. *)
 
 val balance : t -> int
 (** [balance st] is the current player balance. *)

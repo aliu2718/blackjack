@@ -33,9 +33,24 @@ let init_state =
     curr_hand = empty_hand;
   }
 
-let start_round st = raise (Failure "Unimplemented: State.init_play")
 let add_deck st d = { st with deck = d |> combine st.deck |> shuffle }
 let deck_size st = size st.deck
+
+let rec start_round st =
+  try
+    let c1, d' = draw st.deck in
+    let c2, d'' = draw d' in
+    let dealer_card, new_deck = draw d'' in
+    let new_player_hand = [ c1; c2 ] in
+    {
+      st with
+      deck = new_deck;
+      dealer_hand = [ dealer_card ];
+      player_hands = (new_player_hand, empty_hand);
+      curr_hand = new_player_hand;
+    }
+  with EmptyDeck -> start_round (add_deck st standard)
+
 let balance st = raise (Failure "Unimplemented: State.balance")
 let bet st n = raise (Failure "Unimplemented: State.bet")
 let deposit st n = raise (Failure "Unimplemented: State.deposit")

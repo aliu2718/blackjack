@@ -293,6 +293,10 @@ let deck_tests =
 
 (* ########################## STATE TESTS ################################### *)
 
+let standard_state = standard |> add_deck init_state
+let single_card_state = test_add_on_empty |> add_deck standard_state
+let double_standard_state = standard |> add_deck standard_state
+
 (** [current_hand_test name st expected_output] constructs an OUnit test named
     [name] that asserts the quality of [expected_output] with
     [State.hand_size (State.current_hand st)]. Since the cards in a hand are
@@ -333,8 +337,6 @@ let add_deck_test (name : string) (st : State.t) (d : Deck.t)
     (deck_size (add_deck st d))
     ~printer:string_of_int
 
-let standard_state = standard |> add_deck init_state
-
 let add_deck_tests =
   [
     add_deck_test "add empty deck to initial primitive state" init_state empty 0;
@@ -348,8 +350,33 @@ let add_deck_tests =
       standard 104;
   ]
 
+(** [start_round_test name st expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with the deck size,
+    current hand size, and dealer hand size (in this exact order) of
+    [State.start_round st]. *)
+let start_round_test (name : string) (st : State.t)
+    (expected_output : int * int * int) : test =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (let st' = start_round st in
+     ( deck_size st',
+       st' |> current_hand |> hand_size,
+       st' |> dealer_hand |> hand_size ))
+
+let start_round_tests =
+  [
+    start_round_test "start round with initial primitive state" init_state
+      (49, 2, 1);
+    start_round_test "start round with 1-card deck state" single_card_state
+      (50, 2, 1);
+    start_round_test "start round with standard state" standard_state (49, 2, 1);
+    start_round_test "start round with double standard state"
+      double_standard_state (101, 2, 1);
+  ]
+
 let state_tests =
-  List.flatten [ current_hand_tests; dealer_hand_tests; add_deck_tests ]
+  List.flatten
+    [ current_hand_tests; dealer_hand_tests; add_deck_tests; start_round_tests ]
 
 (* ########################## TEST SUITE #################################### *)
 
