@@ -126,7 +126,9 @@ let stand_prompt st =
 (** [main_prompt st] handles the player's inputs and prints the appropriate
     prompts corresponding to the parsed inputs. *)
 let rec main_prompt st =
-  print_endline "\nWhat would you like to do?";
+  print_string "\nYour valid actions are: ";
+  ANSITerminal.print_string [ ANSITerminal.yellow ] "| hit | stand | quit |\n";
+  print_endline "What would you like to do?";
   print_string "> ";
   match read_line () with
   | input -> begin
