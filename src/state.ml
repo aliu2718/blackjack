@@ -69,7 +69,32 @@ type value =
   | Blackjack
   | Value of int
 
-let val_hand h = raise (Failure "Unimplemented: State.val_hand")
+(** [lst_product lstlst] is a list of Cartesian products of the lists in
+    [lstlst]. The order of the elements in each Cartesian product lst is not
+    necessarily the same as the order of appearance in the lists in [lstlst]. *)
+let lst_product lstlst =
+  let prods = ref [ [] ] in
+  List.iter
+    (fun lst ->
+      prods :=
+        List.map (fun h -> List.map (fun p -> h :: p) !prods) lst
+        |> List.flatten)
+    lstlst;
+  !prods
+
+let val_hand h =
+  if hand_size h = 0 then Value 0
+  else
+    let values_list = List.map (fun c -> values c) h in
+    let values_product = lst_product values_list in
+    let lte, gt =
+      List.map (fun prod -> List.fold_left ( + ) 0 prod) values_product
+      |> List.partition (fun v -> v <= 21)
+    in
+    if List.length lte <> 0 then
+      let max_val = List.fold_left max (List.hd lte) (List.tl lte) in
+      if max_val = 21 && hand_size h = 2 then Blackjack else Value max_val
+    else Value (List.fold_left min (List.hd lte) (List.tl lte))
 
 let rec string_of_hand h =
   match h with

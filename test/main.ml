@@ -374,9 +374,25 @@ let start_round_tests =
       double_standard_state (101, 2, 1);
   ]
 
+(** [val_hand_test name st d expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with
+    [State.val_hand (State.current_hand st)]. *)
+let val_hand_test (name : string) (st : State.t) (expected_output : State.value)
+    : test =
+  name >:: fun _ -> assert_equal expected_output (val_hand (current_hand st))
+
+let val_hand_tests =
+  [ val_hand_test "initial primitive state" init_state (Value 0) ]
+
 let state_tests =
   List.flatten
-    [ current_hand_tests; dealer_hand_tests; add_deck_tests; start_round_tests ]
+    [
+      current_hand_tests;
+      dealer_hand_tests;
+      add_deck_tests;
+      start_round_tests;
+      val_hand_tests;
+    ]
 
 (* ########################## TEST SUITE #################################### *)
 

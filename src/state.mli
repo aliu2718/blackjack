@@ -92,14 +92,16 @@ type value =
   | Blackjack
   | Value of int
 
-val val_hand : h -> int
-(** [val_hand h] is the current value of hand [h]:
+val val_hand : h -> value
+(** [val_hand h] is the current "best" value of hand [h]:
 
     - If [v] is the value of [h], then the result is [Value v]. If [h] has
       multiple possible values (i.e., [h] contains an Ace), [v] is the value
-      closest to 21, but not exceeding 21.
+      maximum value less than or equal to 21, or if no such value exists, [v] is
+      the minimum value.
 
-    - If [h] is a Blackjack, then the result is [Blackjack]. *)
+    - If [h] is a Blackjack (i.e., [h] has size 2 and its value is exactly 21),
+      then the result is [Blackjack]. *)
 
 val string_of_hand : h -> string
 (** [string_of_hand h] is the string representation of hand [h]. *)
