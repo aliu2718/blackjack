@@ -1,5 +1,3 @@
-.PHONY: test check
-
 build:
 	dune build
 
@@ -17,22 +15,19 @@ test:
 play:
 	OCAMLRUNPARAM=b dune exec bin/main.exe
 
-check:
-	@bash check.sh
-
-finalcheck:
-	@bash check.sh final
-
 zip:
-	rm -f final.zip
-	zip -r final.zip . -x@exclude.lst
+	dune clean
+	rm -f blackjack.zip
+	zip -r blackjack.zip . -x@exclude.lst
 
 clean:
 	dune clean
-	rm -f final.zip
+	rm -f blackjack.zip
 
 doc:
 	dune build @doc
-
-opendoc: doc
 	@bash opendoc.sh
+
+loc:
+	dune clean
+	cloc --by-file --include-lang=OCaml .
