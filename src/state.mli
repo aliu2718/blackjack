@@ -134,6 +134,10 @@ type status =
 val check_status : t -> status
 (** [check_status st] is the current status of the Blackjack game. *)
 
+val dealer_play : t -> t
+(** [dealer_play st] is the resulting state after the dealer has drawn cards in
+    [st] until the value of their hand is greater than or equal to 17. *)
+
 val string_of_value : value -> string
 (** [string_of_value v] is the string representation of value [v]. *)
 

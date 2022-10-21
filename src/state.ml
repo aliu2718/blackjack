@@ -181,13 +181,19 @@ let check_status st =
         val_hand (snd st.player_hands),
         val_hand st.dealer_hand )
     in
-    if compare_val v (Value 21) > 0 then PlayerWin
+    if compare_val v (Value 21) > 0 && compare_val v Blackjack <> 0 then
+      PlayerWin
     else if compare_val v (Value 17) >= 0 then
       if compare_val v v1 >= 0 && compare_val v v2 >= 0 then DealerWin
       else if compare_val v v1 >= 0 then SecHandWin
       else if compare_val v v2 >= 0 then PrimHandWin
       else PlayerWin
     else ContinueRound
+
+let rec dealer_play st =
+  let st' = snd (hit st) in
+  let status = check_status st' in
+  if status = ContinueRound then dealer_play st' else st'
 
 let string_of_value v =
   match v with

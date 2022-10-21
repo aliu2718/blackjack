@@ -15,29 +15,44 @@ let quit_prompt () =
 (** [print_hands st] prints a prompt containing information of the cards in the
     dealer's hand and player's hand. *)
 let print_hands st =
-  let p_hand = current_hand st in
+  let p1, p2 = player_hands st in
   let d_hand = dealer_hand st in
   ANSITerminal.print_string [ ANSITerminal.yellow ] "The Dealer's hand is: ";
+  let dealer_value =
+    if val_hand d_hand = Blackjack then Value 21 else val_hand d_hand
+  in
   print_endline
     (string_of_hand d_hand ^ "  (Current Value: "
-    ^ string_of_value (val_hand d_hand)
+    ^ string_of_value dealer_value
     ^ ")");
-  ANSITerminal.print_string [ ANSITerminal.yellow ] "Your hand is: ";
-  print_endline
-    (string_of_hand p_hand ^ "  (Current Value: "
-    ^ string_of_value (val_hand p_hand)
-    ^ ")")
+  match p2 = empty_hand with
+  | true ->
+      ANSITerminal.print_string [ ANSITerminal.yellow ] "Your hand is: ";
+      print_endline
+        (string_of_hand p1 ^ "  (Current Value: "
+        ^ string_of_value (val_hand p1)
+        ^ ")")
+  | false ->
+      ANSITerminal.print_string [ ANSITerminal.yellow ] "Your hands are:\n";
+      print_endline
+        ("[Primary Hand] " ^ string_of_hand p1 ^ "  (Current Value: "
+        ^ string_of_value (val_hand p1)
+        ^ ")");
+      print_endline
+        ("[Split Hand] " ^ string_of_hand p2 ^ "  (Current Value: "
+        ^ string_of_value (val_hand p2)
+        ^ ")")
 
 (** [busted_prompt ()] prints a prompt for when the player busts their hand. *)
 let busted_prompt () =
-  ANSITerminal.print_string [ ANSITerminal.red ] "\n\nYour hand was a bust!\n";
+  ANSITerminal.print_string [ ANSITerminal.red ] "\nYour hand was a bust!\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
 (** [blackjack_prompt ()] prints a prompt for when the player hits a Blackjack. *)
 let blackjack_prompt () =
   ANSITerminal.print_string [ ANSITerminal.green ]
-    "\n\nYou have hit a Blackjack!\n";
+    "\nYou have hit a Blackjack!\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
@@ -66,24 +81,50 @@ let hit_prompt st =
   print_hands st';
   st'
 
+(** [dealer_end_prompt st] prints the prompt corresponding to the current state
+    of the Blackjack game after the dealer has finished playing their turn. *)
+let dealer_end_prompt st =
+  match check_status st with
+  | PlayerWin ->
+      ANSITerminal.print_string [ ANSITerminal.green ]
+        "\nYou won! Your hand was better than the Dealer's this round!\n";
+      ANSITerminal.print_string [ ANSITerminal.yellow ]
+        "Starting a new round...\n\n"
+  | DealerWin ->
+      ANSITerminal.print_string [ ANSITerminal.red ]
+        "\nYou lost. The Dealer's hand was better than your hand this round.\n";
+      ANSITerminal.print_string [ ANSITerminal.yellow ]
+        "Starting a new round...\n\n"
+  | _ -> raise (Failure "Unimplemented")
+
+(** [dealer_prompt st] is the new state resulting from the dealer playing. It
+    also handles printing relevant information for the dealer's turn. *)
 let dealer_prompt st =
   ANSITerminal.print_string [ ANSITerminal.magenta ]
-    "The Dealer is now playing...\n\n"
+    "The Dealer is now playing...\n\n";
+  let st' = dealer_play st in
+  print_hands st';
+  dealer_end_prompt st';
+  st'
 
 (** [stand_prompt st] is the new state resulting from the player playing the
     "stand" action. It also handles printing relevant information for the
     action. *)
 let stand_prompt st =
   ANSITerminal.print_string [ ANSITerminal.magenta ]
-    "\n\nStanding for your current hand...\n";
+    "\nStanding for your current hand...\n";
   let st' = stand st in
   if current_turn st' = Dealer then dealer_prompt st'
   else
-    ANSITerminal.print_string [ ANSITerminal.yellow ]
-      "Now playing your second hand...\n";
-  print_hands st';
-  st'
+    let () =
+      ANSITerminal.print_string [ ANSITerminal.yellow ]
+        "Now playing your second hand...\n"
+    in
+    print_hands st';
+    st'
 
+(** [main_prompt st] handles the player's inputs and prints the appropriate
+    prompts corresponding to the parsed inputs. *)
 let rec main_prompt st =
   print_endline "\nWhat would you like to do?";
   print_string "> ";
@@ -110,7 +151,7 @@ let rec main_prompt st =
               new_round_prompt st' |> main_prompt
           | ContinueRound -> main_prompt st'
           | _ -> raise (Failure "Unimplemented"))
-      | Stand -> stand_prompt st |> main_prompt
+      | Stand -> stand_prompt st |> new_round_prompt |> main_prompt
       | _ -> raise (Failure "Unimplemented")
     end
 
@@ -128,5 +169,5 @@ let main () =
   let session' = new_round_prompt session in
   main_prompt session'
 
-(* Execute the game engine. *)
+(* Execute the Blackjack game session. *)
 let () = main ()
