@@ -1,4 +1,4 @@
-# cs3110-final
+# Blackjack System
 
 Andrew Liu (al849)
 Jason Steiner (jns226)
