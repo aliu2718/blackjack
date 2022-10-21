@@ -325,6 +325,23 @@ let dealer_hand_test (name : string) (st : State.t) (expected_output : int) :
 let dealer_hand_tests =
   [ dealer_hand_test "initial primitive state" init_state 0 ]
 
+(** [player_hands_test name st expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with
+    [State.player_hands st)]. Since the cards in a hand are random,
+    [State.dealer_hand st] is tested against the expected hand length. *)
+let player_hands_test (name : string) (st : State.t)
+    (expected_output : int * int) : test =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (let h1, h2 = player_hands st in
+     (hand_size h1, hand_size h2))
+
+let player_hands_tests =
+  [
+    player_hands_test "initial primitive state" init_state (0, 0);
+    player_hands_test "start round state" (init_state |> start_round) (2, 0);
+  ]
+
 (** [add_deck_test name st d expected_output] constructs an OUnit test named
     [name] that asserts the quality of [expected_output] with
     [State.deck_size (State.add_deck st d)]. Since the order of the cards in a
@@ -389,6 +406,7 @@ let state_tests =
     [
       current_hand_tests;
       dealer_hand_tests;
+      player_hands_tests;
       add_deck_tests;
       start_round_tests;
       val_hand_tests;

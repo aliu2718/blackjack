@@ -68,8 +68,9 @@ val current_hand : t -> h
 (** [current_hand st] is the current hand being played, either by the player or
     by the dealer. *)
 
-val player_hands : t -> h list
-(** [player_hand st] is a list of the player's hand(s). *)
+val player_hands : t -> h * h
+(** [player_hand st] is a pair of the player's hand(s). If the player has no
+    second hand, the second hand by default is [empty_hand]. *)
 
 val dealer_hand : t -> h
 (** [dealer_hand st] is the dealer's hand. *)
