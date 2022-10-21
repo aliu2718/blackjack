@@ -28,17 +28,35 @@ let print_hands st =
     ^ string_of_value (val_hand p_hand)
     ^ ")")
 
+(** [busted_prompt ()] prints a prompt for when the player busts their hand. *)
+let busted_prompt () =
+  ANSITerminal.print_string [ ANSITerminal.red ] "\n\nYour hand was a bust!\n";
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    "Starting a new round...\n\n"
+
+(** [blackjack_prompt ()] prints a prompt for when the player hits a Blackjack. *)
+let blackjack_prompt () =
+  ANSITerminal.print_string [ ANSITerminal.green ]
+    "\n\nYou have hit a Blackjack!\n";
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    "Starting a new round...\n\n"
+
 (** [new_round_prompt st] is the new state resulting from starting a new round.
     It also handles start the round and provides information about the new
     round, i.e. dealing new cards to a fresh hand to the player and dealer, and
     informing the player of their hand, the dealer's hand, and the values. *)
-let new_round_prompt st =
+let rec new_round_prompt st =
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "\nDealing new cards for the round...\n\n";
   let st' = start_round st in
   print_hands st';
-  st'
+  if check_status st' = BlackjackWin then
+    let () = blackjack_prompt () in
+    new_round_prompt st'
+  else st'
 
+(** [hit_prompt st] is the new state resulting from the player playing the "hit"
+    action. It also handles printing relevant information for the action. *)
 let hit_prompt st =
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "\n\nHitting the deck...\n\n";
@@ -63,8 +81,18 @@ let rec main_prompt st =
             "\nYou have entered an invalid action. Please try again.\n\n";
           main_prompt st
       | Quit -> quit_prompt ()
-      | Hit -> st |> hit_prompt |> main_prompt
-      | _ -> raise (Failure "Filler")
+      | Hit -> (
+          let st' = st |> hit_prompt in
+          match check_status st' with
+          | PrimHandLose ->
+              let () = busted_prompt () in
+              new_round_prompt st' |> main_prompt
+          | BlackjackWin ->
+              let () = blackjack_prompt () in
+              new_round_prompt st' |> main_prompt
+          | ContinueRound -> main_prompt st'
+          | _ -> raise (Failure "Unimplemented"))
+      | _ -> raise (Failure "Unimplemented")
     end
 
 (** [main ()] starts a session of the Blackjack game. *)

@@ -57,6 +57,7 @@ let rec start_round st =
     new_state with
     dealer_hand = [ dealer_card ];
     player_hands = (new_player_hand, empty_hand);
+    curr_turn = Player;
   }
 
 (** [change_turn st] changes the turn (the resulting state with the new
@@ -137,6 +138,56 @@ let val_hand h =
       let max_val = List.fold_left max (List.hd lte) (List.tl lte) in
       if max_val = 21 && hand_size h = 2 then Blackjack else Value max_val
     else Value (List.fold_left min (List.hd gt) (List.tl gt))
+
+type status =
+  | DealerWin
+  | PlayerWin
+  | PrimHandWin
+  | SecHandWin
+  | PrimHandLose
+  | SecHandLose
+  | BlackjackWin
+  | ContinueRound
+
+(** [compare_val v1 v2] compares two values [v1] and [v2], and is positive if v1
+    is of higher value than v2, negative if v1 is of lower value than v2, and
+    zero if v1 is of equal value than v2. *)
+let compare_val v1 v2 =
+  match v1 with
+  | Value v1' -> begin
+      match v2 with
+      | Value v2' ->
+          if v1' > v2' then v1' - v2' else if v2' > v1' then v1' - v2' else 0
+      | Blackjack -> -1
+    end
+  | Blackjack -> begin
+      match v2 with
+      | Value v2' -> 1
+      | Blackjack -> 0
+    end
+
+let check_status st =
+  let curr_turn = st.curr_turn in
+  if curr_turn <> Dealer then
+    match val_hand (current_hand st) with
+    | Value v ->
+        if v > 21 then if curr_turn = Player then PrimHandLose else SecHandLose
+        else ContinueRound
+    | Blackjack ->
+        if snd st.player_hands = empty_hand then BlackjackWin else ContinueRound
+  else
+    let v1, v2, v =
+      ( val_hand (fst st.player_hands),
+        val_hand (snd st.player_hands),
+        val_hand st.dealer_hand )
+    in
+    if compare_val v (Value 21) > 0 then PlayerWin
+    else if compare_val v (Value 17) >= 0 then
+      if compare_val v v1 >= 0 && compare_val v v2 >= 0 then DealerWin
+      else if compare_val v v1 >= 0 then SecHandWin
+      else if compare_val v v2 >= 0 then PrimHandWin
+      else PlayerWin
+    else ContinueRound
 
 let string_of_value v =
   match v with

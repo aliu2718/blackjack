@@ -120,6 +120,20 @@ val val_hand : h -> value
     - If [h] is a Blackjack (i.e., [h] has size 2 and its value is exactly 21),
       then the result is [Blackjack]. *)
 
+(** The type representing the current status of the Blackjack game. *)
+type status =
+  | DealerWin
+  | PlayerWin
+  | PrimHandWin
+  | SecHandWin
+  | PrimHandLose
+  | SecHandLose
+  | BlackjackWin
+  | ContinueRound
+
+val check_status : t -> status
+(** [check_status st] is the current status of the Blackjack game. *)
+
 val string_of_value : value -> string
 (** [string_of_value v] is the string representation of value [v]. *)
 
