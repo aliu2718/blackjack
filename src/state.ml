@@ -32,6 +32,7 @@ let init_state =
 let add_deck st d = { st with deck = d |> combine st.deck |> shuffle }
 
 let load_state =
+  let () = Random.self_init () in
   let rand_int = 1 + Random.int 9 in
   let primary_deck =
     List.fold_left combine empty (Array.make rand_int standard |> Array.to_list)
@@ -111,6 +112,11 @@ let val_hand h =
       let max_val = List.fold_left max (List.hd lte) (List.tl lte) in
       if max_val = 21 && hand_size h = 2 then Blackjack else Value max_val
     else Value (List.fold_left min (List.hd lte) (List.tl lte))
+
+let string_of_value v =
+  match v with
+  | Blackjack -> "Blackjack"
+  | Value n -> string_of_int n
 
 let rec string_of_hand h =
   match h with

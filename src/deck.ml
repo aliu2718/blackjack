@@ -72,6 +72,7 @@ let shuffle d =
   let d_arr = Array.of_list d in
   let d_size = size d in
   for i = d_size - 1 downto 1 do
+    let () = Random.self_init () in
     let j = Random.int (i + 1) in
     let temp = d_arr.(j) in
     d_arr.(j) <- d_arr.(i);

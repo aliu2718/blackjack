@@ -119,5 +119,8 @@ val val_hand : h -> value
     - If [h] is a Blackjack (i.e., [h] has size 2 and its value is exactly 21),
       then the result is [Blackjack]. *)
 
+val string_of_value : value -> string
+(** [string_of_value v] is the string representation of value [v]. *)
+
 val string_of_hand : h -> string
 (** [string_of_hand h] is the string representation of hand [h]. *)
