@@ -39,19 +39,25 @@ let load_state =
 
 let deck_size st = size st.deck
 
-let rec start_round st =
+(** [draw_card st] is a pair containing the card draw from the deck in [st] and
+    the resulting state. If there are no cards in the deck to be drawn, a
+    52-card standard deck is added to [st] and shuffled prior to drawing a card. *)
+let rec draw_card st =
   try
-    let c1, d' = draw st.deck in
-    let c2, d'' = draw d' in
-    let dealer_card, new_deck = draw d'' in
-    let new_player_hand = [ c1; c2 ] in
-    {
-      st with
-      deck = new_deck;
-      dealer_hand = [ dealer_card ];
-      player_hands = (new_player_hand, empty_hand);
-    }
-  with EmptyDeck -> start_round (add_deck st standard)
+    let c, d' = draw st.deck in
+    (c, { st with deck = d' })
+  with EmptyDeck -> draw_card (add_deck st standard)
+
+let rec start_round st =
+  let c1, st' = draw_card st in
+  let c2, st'' = draw_card st' in
+  let dealer_card, new_state = draw_card st'' in
+  let new_player_hand = [ c1; c2 ] in
+  {
+    new_state with
+    dealer_hand = [ dealer_card ];
+    player_hands = (new_player_hand, empty_hand);
+  }
 
 (** [change_turn st] changes the turn (the resulting state with the new
     appropriate turn). *)
@@ -77,7 +83,24 @@ let current_hand st =
 
 let player_hands st = st.player_hands
 let dealer_hand st = st.dealer_hand
-let hit st = raise (Failure "Unimplemented: State.hit")
+
+let hit st =
+  let c, st' = draw_card st in
+  match st.curr_turn with
+  | Dealer -> (c, { st' with dealer_hand = st.dealer_hand @ [ c ] })
+  | Player ->
+      ( c,
+        {
+          st' with
+          player_hands = (fst st'.player_hands @ [ c ], snd st.player_hands);
+        } )
+  | PlayerSplit ->
+      ( c,
+        {
+          st' with
+          player_hands = (fst st.player_hands, snd st.player_hands @ [ c ]);
+        } )
+
 let stand st = raise (Failure "Unimplemented: State.stand")
 let double st = raise (Failure "Unimplemented: State.double")
 let split st = raise (Failure "Unimplemented: State.split")
@@ -113,7 +136,7 @@ let val_hand h =
     if List.length lte <> 0 then
       let max_val = List.fold_left max (List.hd lte) (List.tl lte) in
       if max_val = 21 && hand_size h = 2 then Blackjack else Value max_val
-    else Value (List.fold_left min (List.hd lte) (List.tl lte))
+    else Value (List.fold_left min (List.hd gt) (List.tl gt))
 
 let string_of_value v =
   match v with

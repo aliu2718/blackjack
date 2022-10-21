@@ -75,9 +75,9 @@ val player_hands : t -> h * h
 val dealer_hand : t -> h
 (** [dealer_hand st] is the dealer's hand. *)
 
-val hit : t -> t
-(** [hit st] is the resulting state after choosing "hit" for the current hand
-    (i.e., taking another card). *)
+val hit : t -> Card.t * t
+(** [hit st] is the card drawn from choosing "hit" (i.e., taking another card)
+    and the resulting state after completing the action. *)
 
 val stand : t -> t
 (** [stand st] is the resulting state after choosing "stand" for the current

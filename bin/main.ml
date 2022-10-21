@@ -1,3 +1,4 @@
+open Blackjack.Card
 open Blackjack.Command
 open Blackjack.Deck
 open Blackjack.State
@@ -11,6 +12,22 @@ let quit_prompt () =
      Exiting the session...\n";
   Stdlib.exit 0
 
+(** [print_hands st] prints a prompt containing information of the cards in the
+    dealer's hand and player's hand. *)
+let print_hands st =
+  let p_hand = current_hand st in
+  let d_hand = dealer_hand st in
+  ANSITerminal.print_string [ ANSITerminal.yellow ] "The Dealer's hand is: ";
+  print_endline
+    (string_of_hand d_hand ^ "  (Current Value: "
+    ^ string_of_value (val_hand d_hand)
+    ^ ")");
+  ANSITerminal.print_string [ ANSITerminal.yellow ] "Your hand is: ";
+  print_endline
+    (string_of_hand p_hand ^ "  (Current Value: "
+    ^ string_of_value (val_hand p_hand)
+    ^ ")")
+
 (** [new_round_prompt st] is the new state resulting from starting a new round.
     It also handles start the round and provides information about the new
     round, i.e. dealing new cards to a fresh hand to the player and dealer, and
@@ -19,18 +36,16 @@ let new_round_prompt st =
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "\nDealing new cards for the round...\n\n";
   let st' = start_round st in
-  let p_hand = current_hand st' in
-  let d_hand = dealer_hand st' in
-  ANSITerminal.print_string [ ANSITerminal.yellow ] "The Dealer's hand is: ";
-  print_string
-    (string_of_hand d_hand ^ "  (Current Value: "
-    ^ string_of_value (val_hand d_hand)
-    ^ ")\n");
-  ANSITerminal.print_string [ ANSITerminal.yellow ] "Your hand is: ";
-  print_string
-    (string_of_hand p_hand ^ "  (Current Value: "
-    ^ string_of_value (val_hand p_hand)
-    ^ ")\n");
+  print_hands st';
+  st'
+
+let hit_prompt st =
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    "\n\nHitting the deck...\n\n";
+  let c, st' = hit st in
+  ANSITerminal.print_string [ ANSITerminal.yellow ] "You have drawn a: ";
+  print_endline (string_of_card c);
+  print_hands st';
   st'
 
 let rec main_prompt st =
@@ -48,6 +63,7 @@ let rec main_prompt st =
             "\nYou have entered an invalid action. Please try again.\n\n";
           main_prompt st
       | Quit -> quit_prompt ()
+      | Hit -> st |> hit_prompt |> main_prompt
       | _ -> raise (Failure "Filler")
     end
 
