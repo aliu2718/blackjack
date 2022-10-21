@@ -24,6 +24,10 @@ val add_deck : t -> Deck.t -> t
 (** [add_deck st d] adds [d] to the top of the current deck in [st], then
     shuffles the combined deck. *)
 
+val load_state : t
+(** [load_state] is the primitive Blackjack game state with a well-shuffled deck
+    consisting of one to eight (inclusive) 52-card standard decks. *)
+
 val deck_size : t -> int
 (** [deck_size st] is the number of playing cards in the current deck in [st]. *)
 
@@ -47,6 +51,18 @@ val deposit : t -> int -> t
 
 val current_bet : t -> int
 (** [current_bet st] is the current bet on the current hand being played. *)
+
+(** A type for representing the current turn. [Dealer] corresponds to the
+    dealer's turn, [Player] corresponds to the player's turn playing their
+    primary hand, and [PlayerSplit] corresponds to the player's turn playing
+    their secondary hand resulting from the action of splitting. *)
+type turn =
+  | Dealer
+  | Player
+  | PlayerSplit
+
+val current_turn : t -> turn
+(** [current_turn] is the current turn of the Blackjack game. *)
 
 val current_hand : t -> h
 (** [current_hand st] is the current hand being played, either by the player or

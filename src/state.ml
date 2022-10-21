@@ -1,10 +1,6 @@
 open Card
 open Deck
 
-(** A type for representing the current turn. [Dealer] corresponds to the
-    dealer's turn, [Player] corresponds to the player's turn playing their
-    primary hand, and [PlayerSplit] corresponds to the player's turn playing
-    their secondary hand resulting from the action of splitting. *)
 type turn =
   | Dealer
   | Player
@@ -34,6 +30,14 @@ let init_state =
   }
 
 let add_deck st d = { st with deck = d |> combine st.deck |> shuffle }
+
+let load_state =
+  let rand_int = 1 + Random.int 9 in
+  let primary_deck =
+    List.fold_left combine empty (Array.make rand_int standard |> Array.to_list)
+  in
+  primary_deck |> add_deck init_state
+
 let deck_size st = size st.deck
 
 let rec start_round st =
@@ -55,10 +59,22 @@ let balance st = raise (Failure "Unimplemented: State.balance")
 let bet st n = raise (Failure "Unimplemented: State.bet")
 let deposit st n = raise (Failure "Unimplemented: State.deposit")
 let current_bet st = raise (Failure "Unimplemented: State.current_bet")
+let current_turn st = st.curr_turn
 let current_hand st = st.curr_hand
 let player_hands st = raise (Failure "Unimplemented: State.player_hands")
 let dealer_hand st = st.dealer_hand
 let hit st = raise (Failure "Unimplemented: State.hit")
+
+(** [change_turn st] changes the turn (the resulting state with the new
+    appropriate turn). *)
+let change_turn st =
+  match st.curr_turn with
+  | Dealer -> { st with curr_turn = Player }
+  | Player ->
+      if snd st.player_hands <> empty_hand then { st with curr_turn = Dealer }
+      else { st with curr_turn = PlayerSplit }
+  | PlayerSplit -> { st with curr_turn = Dealer }
+
 let stand st = raise (Failure "Unimplemented: State.stand")
 let double st = raise (Failure "Unimplemented: State.double")
 let split st = raise (Failure "Unimplemented: State.split")
