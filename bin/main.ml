@@ -6,6 +6,12 @@ open Blackjack.State
 (** [count] is the number of rounds that have been played. *)
 let count = ref 0
 
+(** [wins] is the number of wins the player has. *)
+let wins = ref 0
+
+(** [losses] is the number of losses the player has. *)
+let losses = ref 0
+
 (** [quit_prompt ()] prints a farewell message, then terminates the Blackjack
     game without error messages and exceptions. *)
 let quit_prompt () =
@@ -49,13 +55,14 @@ let print_hands st =
 (** [busted_prompt ()] prints a prompt for when the player busts their hand. *)
 let busted_prompt () =
   ANSITerminal.print_string [ ANSITerminal.red ] "\nYour hand was a bust!\n";
+  incr losses;
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
 (** [blackjack_prompt ()] prints a prompt for when the player hits a Blackjack. *)
 let blackjack_prompt () =
-  ANSITerminal.print_string [ ANSITerminal.green ]
-    "\nYou have hit a Blackjack!\n";
+  ANSITerminal.print_string [ ANSITerminal.green ] "\nYou hit a Blackjack!\n";
+  incr wins;
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
@@ -67,7 +74,11 @@ let rec new_round_prompt st =
   incr count;
   ANSITerminal.print_string [ ANSITerminal.magenta ] "\nDealing new cards for ";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
-    ("round " ^ string_of_int !count ^ "\n\n");
+    ("round " ^ string_of_int !count ^ "\n");
+  ANSITerminal.print_string [ ANSITerminal.green ]
+    ("Wins: " ^ string_of_int !wins ^ "\n");
+  ANSITerminal.print_string [ ANSITerminal.red ]
+    ("Losses: " ^ string_of_int !losses ^ "\n\n");
   let st' = start_round st in
   print_hands st';
   if check_status st' = BlackjackWin then
@@ -93,11 +104,13 @@ let dealer_end_prompt st =
   | PlayerWin | PrimHandWin ->
       ANSITerminal.print_string [ ANSITerminal.green ]
         "\nYou won! Your hand was better than the Dealer's this round!\n";
+      incr wins;
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n"
   | DealerWin ->
       ANSITerminal.print_string [ ANSITerminal.red ]
         "\nYou lost. The Dealer's hand was better than your hand this round.\n";
+      incr losses;
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n"
   | _ -> raise (Failure "Unimplemented")
