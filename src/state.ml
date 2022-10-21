@@ -60,16 +60,6 @@ let rec start_round st =
     curr_turn = Player;
   }
 
-(** [change_turn st] changes the turn (the resulting state with the new
-    appropriate turn). *)
-let change_turn st =
-  match st.curr_turn with
-  | Dealer -> { st with curr_turn = Player }
-  | Player ->
-      if snd st.player_hands <> empty_hand then { st with curr_turn = Dealer }
-      else { st with curr_turn = PlayerSplit }
-  | PlayerSplit -> { st with curr_turn = Dealer }
-
 let balance st = raise (Failure "Unimplemented: State.balance")
 let bet st n = raise (Failure "Unimplemented: State.bet")
 let deposit st n = raise (Failure "Unimplemented: State.deposit")
@@ -102,7 +92,17 @@ let hit st =
           player_hands = (fst st.player_hands, snd st.player_hands @ [ c ]);
         } )
 
-let stand st = raise (Failure "Unimplemented: State.stand")
+(** [change_turn st] changes the turn (the resulting state with the new
+    appropriate turn). *)
+let change_turn st =
+  match st.curr_turn with
+  | Dealer -> { st with curr_turn = Player }
+  | Player ->
+      if snd st.player_hands = empty_hand then { st with curr_turn = Dealer }
+      else { st with curr_turn = PlayerSplit }
+  | PlayerSplit -> { st with curr_turn = Dealer }
+
+let stand st = change_turn st
 let double st = raise (Failure "Unimplemented: State.double")
 let split st = raise (Failure "Unimplemented: State.split")
 let surrender st = raise (Failure "Unimplemented: State.surrender")

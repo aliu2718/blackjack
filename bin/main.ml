@@ -46,7 +46,7 @@ let blackjack_prompt () =
     round, i.e. dealing new cards to a fresh hand to the player and dealer, and
     informing the player of their hand, the dealer's hand, and the values. *)
 let rec new_round_prompt st =
-  ANSITerminal.print_string [ ANSITerminal.yellow ]
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
     "\nDealing new cards for the round...\n\n";
   let st' = start_round st in
   print_hands st';
@@ -58,11 +58,29 @@ let rec new_round_prompt st =
 (** [hit_prompt st] is the new state resulting from the player playing the "hit"
     action. It also handles printing relevant information for the action. *)
 let hit_prompt st =
-  ANSITerminal.print_string [ ANSITerminal.yellow ]
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
     "\n\nHitting the deck...\n\n";
   let c, st' = hit st in
   ANSITerminal.print_string [ ANSITerminal.yellow ] "You have drawn a: ";
   print_endline (string_of_card c);
+  print_hands st';
+  st'
+
+let dealer_prompt st =
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "The Dealer is now playing...\n\n"
+
+(** [stand_prompt st] is the new state resulting from the player playing the
+    "stand" action. It also handles printing relevant information for the
+    action. *)
+let stand_prompt st =
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "\n\nStanding for your current hand...\n";
+  let st' = stand st in
+  if current_turn st' = Dealer then dealer_prompt st'
+  else
+    ANSITerminal.print_string [ ANSITerminal.yellow ]
+      "Now playing your second hand...\n";
   print_hands st';
   st'
 
@@ -92,6 +110,7 @@ let rec main_prompt st =
               new_round_prompt st' |> main_prompt
           | ContinueRound -> main_prompt st'
           | _ -> raise (Failure "Unimplemented"))
+      | Stand -> stand_prompt st |> main_prompt
       | _ -> raise (Failure "Unimplemented")
     end
 
