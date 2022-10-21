@@ -3,6 +3,9 @@ open Blackjack.Command
 open Blackjack.Deck
 open Blackjack.State
 
+(** [count] is the number of rounds that have been played. *)
+let count = ref 0
+
 (** [quit_prompt ()] prints a farewell message, then terminates the Blackjack
     game without error messages and exceptions. *)
 let quit_prompt () =
@@ -61,8 +64,10 @@ let blackjack_prompt () =
     round, i.e. dealing new cards to a fresh hand to the player and dealer, and
     informing the player of their hand, the dealer's hand, and the values. *)
 let rec new_round_prompt st =
-  ANSITerminal.print_string [ ANSITerminal.magenta ]
-    "\nDealing new cards for the round...\n\n";
+  incr count;
+  ANSITerminal.print_string [ ANSITerminal.magenta ] "\nDealing new cards for ";
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    ("round " ^ string_of_int !count ^ "\n\n");
   let st' = start_round st in
   print_hands st';
   if check_status st' = BlackjackWin then
@@ -76,7 +81,7 @@ let hit_prompt st =
   ANSITerminal.print_string [ ANSITerminal.magenta ]
     "\n\nHitting the deck...\n\n";
   let c, st' = hit st in
-  ANSITerminal.print_string [ ANSITerminal.yellow ] "You have drawn a: ";
+  ANSITerminal.print_string [ ANSITerminal.yellow ] "You have drawn: ";
   print_endline (string_of_card c);
   print_hands st';
   st'
@@ -85,7 +90,7 @@ let hit_prompt st =
     of the Blackjack game after the dealer has finished playing their turn. *)
 let dealer_end_prompt st =
   match check_status st with
-  | PlayerWin ->
+  | PlayerWin | PrimHandWin ->
       ANSITerminal.print_string [ ANSITerminal.green ]
         "\nYou won! Your hand was better than the Dealer's this round!\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
