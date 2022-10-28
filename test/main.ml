@@ -391,6 +391,16 @@ let start_round_tests =
       double_standard_state (101, 2, 1);
   ]
 
+(** [bet_test name st n expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with the balance of
+    [State.bet st n]. *)
+let bet_test (name : string) (st : State.t) (n : int) (expected_output : int) :
+    test =
+  name >:: fun _ -> assert_equal expected_output (bet st n |> balance)
+
+let bet_tests =
+  [ bet_test "bet from initial primitive state" init_state 400 600 ]
+
 (** [val_hand_test name st d expected_output] constructs an OUnit test named
     [name] that asserts the quality of [expected_output] with
     [State.val_hand (State.current_hand st)]. *)

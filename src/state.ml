@@ -13,6 +13,7 @@ type t = {
   dealer_hand : h;
   player_hands : h * h;
   curr_turn : turn;
+  balance : int;
 }
 
 exception IllegalAction
@@ -25,6 +26,7 @@ let init_state =
     dealer_hand = empty_hand;
     player_hands = (empty_hand, empty_hand);
     curr_turn = Player;
+    balance = 1000;
   }
 
 let add_deck st d = { st with deck = d |> combine st.deck |> shuffle }
@@ -60,9 +62,13 @@ let rec start_round st =
     curr_turn = Player;
   }
 
-let balance st = raise (Failure "Unimplemented: State.balance")
-let bet st n = raise (Failure "Unimplemented: State.bet")
-let deposit st n = raise (Failure "Unimplemented: State.deposit")
+let balance st = st.balance
+
+let bet st n =
+  if n > st.balance then raise IllegalAction
+  else { st with balance = st.balance - n }
+
+let deposit st n = { st with balance = st.balance + n }
 let current_bet st = raise (Failure "Unimplemented: State.current_bet")
 let current_turn st = st.curr_turn
 
