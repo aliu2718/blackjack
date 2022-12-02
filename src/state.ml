@@ -26,7 +26,7 @@ let init_state =
     dealer_hand = empty_hand;
     player_hands = (empty_hand, empty_hand);
     curr_turn = Player;
-    balance = 1000;
+    balance = 500;
   }
 
 let add_deck st d = { st with deck = d |> combine st.deck }
@@ -66,7 +66,7 @@ let rec start_round st =
 let balance st = st.balance
 
 let bet st n =
-  if n > st.balance then raise IllegalAction
+  if st.balance < 2 then raise IllegalAction
   else { st with balance = st.balance - n }
 
 let deposit st n = { st with balance = st.balance + n }
