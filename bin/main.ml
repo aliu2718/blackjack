@@ -96,7 +96,7 @@ let rec new_round_prompt st =
   ANSITerminal.print_string [ ANSITerminal.green ]
     ("Wins: " ^ string_of_int !wins ^ "\n");
   ANSITerminal.print_string [ ANSITerminal.red ]
-    ("Losses: " ^ string_of_int !losses ^ "\n");
+    ("Losses: " ^ string_of_int !losses ^ "\n\n");
   let st' = start_round st in
   print_hands st';
   if check_status st' = BlackjackWin then
