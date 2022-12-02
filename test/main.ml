@@ -10,6 +10,11 @@ open State
 let test_card_1 = init_card Ace Diamonds [ 1; 11 ]
 let test_card_2 = init_card (Number 2) Spades [ 2 ]
 let test_card_3 = init_card (Number 3) Clubs [ 3 ]
+let test_card_4 = init_card (Number 3) Diamonds [ 3 ]
+let test_card_5 = init_card (Number 3) Spades [ 2 ]
+let test_card_6 = init_card (Number 3) Diamonds [ 3; 4; 100; 13 ]
+let test_card_7 = init_card Jack Diamonds [ 10 ]
+let test_card_8 = init_card Queen Hearts [ 2 ]
 let test_ace_of_spades = init_card Ace Spades [ 1; 11 ]
 let test_add_on_empty = add empty test_card_1
 let test_add_on_1card = add test_add_on_empty test_card_2
@@ -18,6 +23,35 @@ let test_combine_empty = combine empty test_another_1card_deck
 let test_combine_nonempty = combine test_another_1card_deck test_add_on_1card
 
 (* ########################### CARD TESTS ################################### *)
+
+(** [equals_test name c1 c2 expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with
+    [Card.equals c1 c2]. *)
+let equals_test (name : string) (c1 : Card.t) (c2 : Card.t)
+    (expected_output : bool) : test =
+  name >:: fun _ ->
+  assert_equal expected_output (equals c1 c2) ~printer:string_of_bool
+
+let equals_tests =
+  [
+    equals_test "Unequal rank, suit, and values" test_card_1 test_card_2 false;
+    equals_test "Number rank (different int), suit, and values" test_card_2
+      test_card_3 false;
+    equals_test "Equal rank, unequal suit and values" test_card_3 test_card_5
+      false;
+    equals_test "Equal suit, unequal rank and values" test_card_1 test_card_7
+      false;
+    equals_test "Equal values, unequal rank and suit" test_card_2 test_card_8
+      false;
+    equals_test "Unequal values, equal rank and suit" test_card_4 test_card_6
+      true;
+    equals_test "Unequal rank, equal suit and values" test_card_5 test_card_2
+      false;
+    equals_test "Unequal suit, equal rank and values" test_card_3 test_card_4
+      false;
+    equals_test "Equal rank, suit, and values" test_ace_of_spades
+      test_ace_of_spades true;
+  ]
 
 (** [string_of_int_list lst] is the string representation of list [lst]. *)
 let rec string_of_int_list lst =
@@ -33,6 +67,7 @@ let values_test (name : string) (c : Card.t) (expected_output : int list) : test
 let values_tests =
   [
     values_test "2 of Spades" test_card_2 [ 2 ];
+    values_test "Unofficial card" test_card_6 [ 3; 4; 100; 13 ];
     values_test "Ace of Diamonds" test_card_1 [ 1; 11 ];
   ]
 
@@ -50,7 +85,8 @@ let string_of_card_tests =
     string_of_card_test "2 of Spades" test_card_2 "2 of Spades";
   ]
 
-let card_tests = List.flatten [ values_tests; string_of_card_tests ]
+let card_tests =
+  List.flatten [ equals_tests; values_tests; string_of_card_tests ]
 
 (* ######################## COMMAND TESTS ################################### *)
 

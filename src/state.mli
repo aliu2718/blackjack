@@ -106,6 +106,9 @@ val surrender : t -> t
 val hand_size : h -> int
 (** [hand_size h] is the number of cards in hand [h]. *)
 
+val hand_contains : Card.t -> h -> bool
+(** [hand_contains c h] is whether or not hand [h] contains card [c]. *)
+
 (** The type representing the best value of a Blackjack hand. *)
 type value =
   | Blackjack

@@ -36,5 +36,9 @@ val suit : t -> suit
 val values : t -> int list
 (** [values c] is a list of values associated with the playing card [c]. *)
 
+val equals : t -> t -> bool
+(** [equals c1 c2] is whether or not both the rank and suit of [c1] and [c2] are
+    the same. *)
+
 val string_of_card : t -> string
 (** [string_of_card c] is a string representation of the playing card [c]. *)

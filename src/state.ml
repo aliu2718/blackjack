@@ -115,6 +115,11 @@ let split st = raise (Failure "Unimplemented: State.split")
 let surrender st = raise (Failure "Unimplemented: State.surrender")
 let hand_size h = List.length h
 
+let rec hand_contains c h =
+  match h with
+  | [] -> false
+  | hd :: t -> equals hd c || hand_contains c t
+
 type value =
   | Blackjack
   | Value of int
