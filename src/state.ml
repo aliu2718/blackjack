@@ -29,15 +29,16 @@ let init_state =
     balance = 1000;
   }
 
-let add_deck st d = { st with deck = d |> combine st.deck |> shuffle }
+let add_deck st d = { st with deck = d |> combine st.deck }
+let shuffle_deck st = { st with deck = shuffle st.deck }
 
 let load_state =
   let () = Random.self_init () in
-  let rand_int = 1 + Random.int 9 in
+  let rand_int = 4 + Random.int 5 in
   let primary_deck =
     List.fold_left combine empty (Array.make rand_int standard |> Array.to_list)
   in
-  primary_deck |> add_deck init_state
+  primary_deck |> add_deck init_state |> shuffle_deck
 
 let deck_size st = size st.deck
 
@@ -48,7 +49,7 @@ let rec draw_card st =
   try
     let c, d' = draw st.deck in
     (c, { st with deck = d' })
-  with EmptyDeck -> draw_card (add_deck st standard)
+  with EmptyDeck -> standard |> add_deck st |> shuffle_deck |> draw_card
 
 let rec start_round st =
   let c1, st' = draw_card st in

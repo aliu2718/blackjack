@@ -21,8 +21,10 @@ val init_state : t
     empty deck, zero balance, and no bets. *)
 
 val add_deck : t -> Deck.t -> t
-(** [add_deck st d] adds [d] to the top of the current deck in [st], then
-    shuffles the combined deck. *)
+(** [add_deck st d] adds [d] to the top of the current deck in [st]. *)
+
+val shuffle_deck : t -> t
+(** [shuffle_deck st] shuffles the deck in [st]. *)
 
 val load_state : t
 (** [load_state] is the primitive Blackjack game state with a well-shuffled deck
