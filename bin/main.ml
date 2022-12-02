@@ -66,11 +66,29 @@ let blackjack_prompt () =
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
+let rec bet_prompt st =
+  print_string "\nYour current balance is: ";
+  ANSITerminal.print_string [ ANSITerminal.blue ]
+    ("$" ^ string_of_int (balance st) ^ ".\n\n");
+  print_endline "How much would you like to bet? Enter an integer.";
+  print_string "> ";
+  match int_of_string (read_line ()) with
+  | x ->
+      ANSITerminal.print_string [ ANSITerminal.red ]
+        ("\nYou have $"
+        ^ string_of_int (bet st x |> balance)
+        ^ " remaining.\n\n")
+  | exception _ ->
+      ANSITerminal.print_string [ ANSITerminal.red ]
+        "\nYou have entered an invalid value. Please try again.\n\n";
+      bet_prompt st
+
 (** [new_round_prompt st] is the new state resulting from starting a new round.
     It also handles start the round and provides information about the new
     round, i.e. dealing new cards to a fresh hand to the player and dealer, and
     informing the player of their hand, the dealer's hand, and the values. *)
 let rec new_round_prompt st =
+  bet_prompt st;
   incr count;
   ANSITerminal.print_string [ ANSITerminal.magenta ] "\nDealing new cards for ";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
@@ -78,7 +96,7 @@ let rec new_round_prompt st =
   ANSITerminal.print_string [ ANSITerminal.green ]
     ("Wins: " ^ string_of_int !wins ^ "\n");
   ANSITerminal.print_string [ ANSITerminal.red ]
-    ("Losses: " ^ string_of_int !losses ^ "\n\n");
+    ("Losses: " ^ string_of_int !losses ^ "\n");
   let st' = start_round st in
   print_hands st';
   if check_status st' = BlackjackWin then
