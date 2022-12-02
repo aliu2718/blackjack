@@ -18,7 +18,7 @@ let rec remove_whitespace = function
   | h :: t -> if h = "" then remove_whitespace t else h :: remove_whitespace t
 
 (** [extract_int] pattern matches to extract the string representation of an int
-    from to options Bet and Deposit, then converting into an int. *)
+    from options Bet and Deposit, then converting into an int. *)
 let extract_int = function
   | [ x ] -> int_of_string x
   | [] -> raise Malformed
@@ -31,4 +31,3 @@ let parse str =
   | [ "stand" ] -> Stand
   | [ "quit" ] -> Quit
   | _ -> raise Malformed
-(*| h :: t -> if h = "bet" then Bet (extract_int t) else raise Malformed*)
