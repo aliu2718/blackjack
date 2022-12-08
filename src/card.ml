@@ -22,12 +22,12 @@ let rank c = c.rank
 let suit c = c.suit
 let values c = c.values
 
-let equals c1 c2 =
-  c1.suit = c2.suit
-  &&
-  match (c1.rank, c2.rank) with
+let is_rank c r =
+  match (c.rank, r) with
   | Number i1, Number i2 -> i1 = i2
   | r1, r2 -> r1 = r2
+
+let equals c1 c2 = c1.suit = c2.suit && is_rank c1 c2.rank
 
 (** [string_of_rank r] is the string representation of rank [r]. *)
 let string_of_rank = function

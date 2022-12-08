@@ -48,7 +48,8 @@ let deck_size st = size st.deck
 let rec draw_card st =
   try
     let c, d' = draw st.deck in
-    (c, { st with deck = d' })
+    let st' = { st with deck = d' } in
+    (c, st')
   with EmptyDeck -> standard |> add_deck st |> shuffle_deck |> draw_card
 
 let rec start_round st =
@@ -115,10 +116,10 @@ let split st = raise (Failure "Unimplemented: State.split")
 let surrender st = raise (Failure "Unimplemented: State.surrender")
 let hand_size h = List.length h
 
-let rec hand_contains c h =
+let rec hand_contains_rank r h =
   match h with
   | [] -> false
-  | hd :: t -> equals hd c || hand_contains c t
+  | hd :: t -> is_rank hd r || hand_contains_rank r t
 
 type value =
   | Blackjack
@@ -206,6 +207,13 @@ let rec dealer_play st =
   let st' = snd (hit st) in
   let status = check_status st' in
   if status = ContinueRound then dealer_play st' else st'
+
+let list_of_hand h = h
+
+let int_of_value v =
+  match v with
+  | Blackjack -> 21
+  | Value n -> n
 
 let string_of_value v =
   match v with

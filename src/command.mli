@@ -11,6 +11,7 @@ type command =
   | Double
   | Split
   | Surrender
+  | Evaluate
   | Quit
 
 exception Empty
@@ -37,7 +38,7 @@ val parse : string -> command
 
     Raises: [Malformed] if the command is malformed. A command is malformed if
     the action is neither "bet", "deposit", "hit", "stand", "double", "split",
-    "surrender", nor "quit", or if the action is "bet" or "deposit" and there is
-    a non-integer afterwards, or if the action is "bet" or "deposit" and there
-    are multiple integers afterwards, or if the action is one of the other six
-    and there is/are non-space character(s) afterwards. *)
+    "surrender", "evaluate", nor "quit", or if the action is "bet" or "deposit"
+    and there is a non-integer afterwards, or if the action is "bet" or
+    "deposit" and there are multiple integers afterwards, or if the action is
+    one of the other six and there is/are non-space character(s) afterwards. *)

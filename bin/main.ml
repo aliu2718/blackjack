@@ -1,6 +1,7 @@
 open Blackjack.Card
 open Blackjack.Command
 open Blackjack.Deck
+open Blackjack.Engine
 open Blackjack.State
 
 (** [count] is the number of rounds that have been played. *)
@@ -97,7 +98,7 @@ let rec new_round_prompt st =
     ("Wins: " ^ string_of_int !wins ^ "\n");
   ANSITerminal.print_string [ ANSITerminal.red ]
     ("Losses: " ^ string_of_int !losses ^ "\n\n");
-  let st' = start_round st in
+  let st' = start_round st |> update_evaluation_new_round in
   print_hands st';
   if check_status st' = BlackjackWin then
     let () = blackjack_prompt () in
@@ -138,7 +139,7 @@ let dealer_end_prompt st =
 let dealer_prompt st =
   ANSITerminal.print_string [ ANSITerminal.magenta ]
     "The Dealer is now playing...\n\n";
-  let st' = dealer_play st in
+  let st' = dealer_play st |> update_evaluation_dealer in
   print_hands st';
   dealer_end_prompt st';
   st'
@@ -163,7 +164,8 @@ let stand_prompt st =
     prompts corresponding to the parsed inputs. *)
 let rec main_prompt st =
   print_string "\nYour valid actions are: ";
-  ANSITerminal.print_string [ ANSITerminal.yellow ] "| hit | stand | quit |\n";
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    "| hit | stand | evaluate | quit |\n";
   print_endline "What would you like to do?";
   print_string "> ";
   match read_line () with
@@ -179,7 +181,7 @@ let rec main_prompt st =
           main_prompt st
       | Quit -> quit_prompt ()
       | Hit -> (
-          let st' = st |> hit_prompt in
+          let st' = st |> hit_prompt |> update_evaluation_curr_round in
           match check_status st' with
           | PrimHandLose ->
               let () = busted_prompt () in
@@ -190,6 +192,9 @@ let rec main_prompt st =
           | ContinueRound -> main_prompt st'
           | _ -> raise (Failure "Unimplemented"))
       | Stand -> stand_prompt st |> new_round_prompt |> main_prompt
+      | Evaluate ->
+          print_endline (string_of_evaluation ());
+          main_prompt st
       | _ -> raise (Failure "Unimplemented")
     end
 

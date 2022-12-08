@@ -6,6 +6,7 @@ type command =
   | Double
   | Split
   | Surrender
+  | Evaluate
   | Quit
 
 exception Empty
@@ -30,4 +31,5 @@ let parse str =
   | [ "hit" ] -> Hit
   | [ "stand" ] -> Stand
   | [ "quit" ] -> Quit
+  | [ "evaluate" ] -> Evaluate
   | _ -> raise Malformed

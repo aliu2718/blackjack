@@ -14,13 +14,25 @@ type move =
   | Surrender
 
 type t
-(** The abstract type of values representing a summary of the game state,
+(** The abstract type of values representing an evaluation of the game state,
     consisting of information such as the best move, factor at which to bet,
     number of cards/decks in the state, and card/true counts. *)
 
-val summary : State.t -> t
-(** [summary st] is a summary of the game state with helpful information. *)
+val update_evaluation_curr_round : State.t -> State.t
+(** [update_evaluation_curr_round st] updates the stored evaluation based on
+    [st]. The evaluation is updated everytime after a card is drawn and the
+    round is being played on. The result is [st], which is left unchanged. *)
 
-val string_of_summary : t -> string
-(** [string_of_summary s] is a string representation of [s] that is presentable
-    to the player. *)
+val update_evaluation_new_round : State.t -> State.t
+(** [update_evaluation_new_round st] updates the stored evaluation based on
+    [st]. The evaluation is updated everytime after a new round is started. The
+    result is [st], which is left unchanged. *)
+
+val update_evaluation_dealer : State.t -> State.t
+(** [update_evaluation_dealer st] updates the stored evaluation based on [st].
+    The evaluationis updated everytime after the dealer hits the deck during
+    their turn. The result is [st], which is left unchanged. *)
+
+val string_of_evaluation : unit -> string
+(** [string_of_summary ()] is a string representation of the stored evaluation
+    that is presentable to the player. *)

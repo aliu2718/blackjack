@@ -106,8 +106,9 @@ val surrender : t -> t
 val hand_size : h -> int
 (** [hand_size h] is the number of cards in hand [h]. *)
 
-val hand_contains : Card.t -> h -> bool
-(** [hand_contains c h] is whether or not hand [h] contains card [c]. *)
+val hand_contains_rank : Card.rank -> h -> bool
+(** [hand_contains_rank r h] is whether or not hand [h] contains a card of rank
+    [r]. *)
 
 (** The type representing the best value of a Blackjack hand. *)
 type value =
@@ -142,6 +143,12 @@ val check_status : t -> status
 val dealer_play : t -> t
 (** [dealer_play st] is the resulting state after the dealer has drawn cards in
     [st] until the value of their hand is greater than or equal to 17. *)
+
+val list_of_hand : h -> Card.t list
+(** [list_of_hand h] is a list of cards in [h]. *)
+
+val int_of_value : value -> int
+(** [int_of_value v] is the integer equivalent value of value [v]. *)
 
 val string_of_value : value -> string
 (** [string_of_value v] is the string representation of value [v]. *)
