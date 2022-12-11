@@ -22,6 +22,13 @@ let quit_prompt () =
      Exiting the session...\n";
   Stdlib.exit 0
 
+let emptybal_prompt () =
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "\n\
+     Uh oh! You have run out of money! Thank you for playing! Exiting the \
+     session...\n";
+  Stdlib.exit 0
+
 (** [print_hands st] prints a prompt containing information of the cards in the
     dealer's hand and player's hand. *)
 let print_hands st =
@@ -57,15 +64,38 @@ let print_hands st =
 let busted_prompt () =
   ANSITerminal.print_string [ ANSITerminal.red ] "\nYour hand was a bust!\n";
   incr losses;
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "\n\n\
+     #################################################################################\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
-(** [blackjack_prompt ()] prints a prompt for when the player hits a Blackjack. *)
-let blackjack_prompt () =
+(** [blackjack_prompt ()] prints a prompt for when the player hits a Blackjack
+    and there is no standoff.*)
+let blackjack_prompt st =
   ANSITerminal.print_string [ ANSITerminal.green ] "\nYou hit a Blackjack!\n";
   incr wins;
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "\n\n\
+     #################################################################################\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
-    "Starting a new round...\n\n"
+    "Starting a new round...\n\n";
+  let st' = deposit st (current_bet st * 2) in
+  st'
+
+(** [standoff_prompt ()] prints a prompt for when the player hits a Blackjack
+    and there is a standoff *)
+let standoff_prompt st =
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    "\n\
+     You hit a Blackjack, but the dealer also has a Blackjack. It's a standoff!\n";
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "\n\n\
+     #################################################################################\n";
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    "Starting a new round...\n\n";
+  let st' = deposit st (current_bet st) in
+  st'
 
 let rec bet_prompt st =
   print_string "\nYour current balance is: ";
@@ -74,11 +104,28 @@ let rec bet_prompt st =
   print_endline "How much would you like to bet? Enter an integer.";
   print_string "> ";
   match int_of_string (read_line ()) with
-  | x ->
-      ANSITerminal.print_string [ ANSITerminal.red ]
-        ("\nYou have $"
-        ^ string_of_int (bet st x |> balance)
-        ^ " remaining.\n\n")
+  | x -> (
+      try
+        ANSITerminal.print_string [ ANSITerminal.red ]
+          ("\nYou have $"
+          ^ string_of_int (bet st x |> balance)
+          ^ " remaining.\n\n");
+        let st' = bet st x in
+        st'
+      with
+      | IllegalAction ->
+          let () =
+            ANSITerminal.print_string [ ANSITerminal.red ]
+              "\nYou cannot bet more than you have.\n"
+          in
+          bet_prompt st
+      | NegativeBet ->
+          let () =
+            ANSITerminal.print_string [ ANSITerminal.red ]
+              "\nYou must bet more then 0.\n"
+          in
+          bet_prompt st
+      | EmptyBalance -> emptybal_prompt ())
   | exception _ ->
       ANSITerminal.print_string [ ANSITerminal.red ]
         "\nYou have entered an invalid value. Please try again.\n\n";
@@ -89,7 +136,6 @@ let rec bet_prompt st =
     round, i.e. dealing new cards to a fresh hand to the player and dealer, and
     informing the player of their hand, the dealer's hand, and the values. *)
 let rec new_round_prompt st =
-  bet_prompt st;
   incr count;
   ANSITerminal.print_string [ ANSITerminal.magenta ] "\nDealing new cards for ";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
@@ -99,9 +145,15 @@ let rec new_round_prompt st =
   ANSITerminal.print_string [ ANSITerminal.red ]
     ("Losses: " ^ string_of_int !losses ^ "\n\n");
   let st' = start_round st |> update_evaluation_new_round in
+  let st' = bet_prompt st' in
+  ANSITerminal.print_string [ ANSITerminal.blue ]
+    ("Current Bet: " ^ string_of_int (current_bet st') ^ "\n\n");
   print_hands st';
   if check_status st' = BlackjackWin then
-    let () = blackjack_prompt () in
+    let st' = blackjack_prompt st' in
+    new_round_prompt st'
+  else if check_status st' = Standoff then
+    let st' = standoff_prompt st' in
     new_round_prompt st'
   else st'
 
@@ -116,22 +168,51 @@ let hit_prompt st =
   print_hands st';
   st'
 
+(** [split_prompt st] is the new state resulting from the player playing the
+    "split" action. It also handles printing relevant information for the
+    action. *)
+let split_prompt st =
+  try
+    let st' = split st in
+    ANSITerminal.print_string [ ANSITerminal.magenta ]
+      "\n\nSplitting the deck...\n\n";
+    print_hands st';
+    st'
+  with IllegalAction ->
+    ANSITerminal.print_string [ ANSITerminal.red ]
+      "\n\n\
+       Unable to split. You must have a hand with two cards of the same rank \
+       from the initial deal. Please enter a different command.\n\n";
+    print_hands st;
+    st
+
 (** [dealer_end_prompt st] prints the prompt corresponding to the current state
     of the Blackjack game after the dealer has finished playing their turn. *)
 let dealer_end_prompt st =
   match check_status st with
-  | PlayerWin | PrimHandWin ->
+  | SingleWin ->
       ANSITerminal.print_string [ ANSITerminal.green ]
-        "\nYou won! Your hand was better than the Dealer's this round!\n";
+        "\n\
+         You won! Your hand was better than the Dealer's this round!\n\
+         Paying out bet!\n";
       incr wins;
+      ANSITerminal.print_string [ ANSITerminal.magenta ]
+        "\n\n\
+         #################################################################################\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
-        "Starting a new round...\n\n"
+        "Starting a new round...\n\n";
+      let st' = deposit st (current_bet st * 2) in
+      st'
   | DealerWin ->
       ANSITerminal.print_string [ ANSITerminal.red ]
         "\nYou lost. The Dealer's hand was better than your hand this round.\n";
       incr losses;
+      ANSITerminal.print_string [ ANSITerminal.magenta ]
+        "\n\n\
+         #################################################################################\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
-        "Starting a new round...\n\n"
+        "Starting a new round...\n\n";
+      st
   | _ -> raise (Failure "Unimplemented")
 
 (** [dealer_prompt st] is the new state resulting from the dealer playing. It
@@ -141,8 +222,8 @@ let dealer_prompt st =
     "The Dealer is now playing...\n\n";
   let st' = dealer_play st |> update_evaluation_dealer in
   print_hands st';
-  dealer_end_prompt st';
-  st'
+  let st' = dealer_end_prompt st' in
+  new_round_prompt st'
 
 (** [stand_prompt st] is the new state resulting from the player playing the
     "stand" action. It also handles printing relevant information for the
@@ -165,7 +246,7 @@ let stand_prompt st =
 let rec main_prompt st =
   print_string "\nYour valid actions are: ";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
-    "| hit | stand | evaluate | quit |\n";
+    "| hit | stand | split | double | surrender | evaluate | quit |\n";
   print_endline "What would you like to do?";
   print_string "> ";
   match read_line () with
@@ -183,18 +264,27 @@ let rec main_prompt st =
       | Hit -> (
           let st' = st |> hit_prompt |> update_evaluation_curr_round in
           match check_status st' with
-          | PrimHandLose ->
+          | DealerWin ->
               let () = busted_prompt () in
               new_round_prompt st' |> main_prompt
           | BlackjackWin ->
-              let () = blackjack_prompt () in
+              let st' = blackjack_prompt st in
               new_round_prompt st' |> main_prompt
           | ContinueRound -> main_prompt st'
+          | Standoff ->
+              let st' = standoff_prompt st in
+              new_round_prompt st' |> main_prompt
+          | Push ->
+              let st' = standoff_prompt st in
+              new_round_prompt st' |> main_prompt
           | _ -> raise (Failure "Unimplemented"))
-      | Stand -> stand_prompt st |> new_round_prompt |> main_prompt
+      | Stand -> stand_prompt st |> main_prompt
+      | Split -> split_prompt st |> main_prompt
       | Evaluate ->
           print_endline (string_of_evaluation ());
           main_prompt st
+      | Surrender -> failwith "todo"
+      | Double -> failwith "todo"
       | _ -> raise (Failure "Unimplemented")
     end
 

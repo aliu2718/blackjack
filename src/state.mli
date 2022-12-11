@@ -13,6 +13,13 @@ type t
 exception IllegalAction
 (** Raised when an illegal action is taken in the Blackjack game state. *)
 
+exception NegativeBet
+(** Raised when a bet that is <=0 is placed in the Blackjack game state. *)
+
+exception EmptyBalance
+(** Raised when a bet is placed when the player has zero balancein the Blackjack
+    game state. *)
+
 val empty_hand : h
 (** [empty_hand] is a hand with no cards. *)
 
@@ -86,10 +93,18 @@ val stand : t -> t
     hand (i.e., take no more cards). The current hand swaps to the next hand to
     play. *)
 
+val is_doubleable : h -> t -> bool
+(** [is_doubleable h st] is whether or not the player can double the bet on [h]
+    in [st]. *)
+
 val double : t -> t
 (** [double st] is the resulting state after choosing "double" for the current
     hand. The current hand takes exactly one more card, and the current bet on
     the hand is doubled. *)
+
+val is_splittable : h -> t -> bool
+(** [is_splittable h st] is whether or not the player can split the hand [h] in
+    [st]. *)
 
 val split : t -> t
 (** [split st] is the resulting state after choosing "split" for the current
@@ -97,6 +112,10 @@ val split : t -> t
     then each hand takes an extra card such that they both have two cards. The
     current hand switches to the newly created hand. Once a hand is split, the
     player can neither double nor split again, nor can they receive a Blackjack. *)
+
+val is_surrenderable : h -> t -> bool
+(** [is_surrenderable h st] is whether or not the player can surrender [h] in
+    [st]. *)
 
 val surrender : t -> t
 (** [surrender st] is the resulting state after choosing "surrender" for the
@@ -129,12 +148,12 @@ val val_hand : h -> value
 (** The type representing the current status of the Blackjack game. *)
 type status =
   | DealerWin
-  | PlayerWin
-  | PrimHandWin
-  | SecHandWin
-  | PrimHandLose
-  | SecHandLose
+  | SingleWin
+  | MulitWin
+  | Push
+  | SplitPartialLoss
   | BlackjackWin
+  | Standoff
   | ContinueRound
 
 val check_status : t -> status

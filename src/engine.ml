@@ -17,23 +17,6 @@ type t = {
   mutable true_count : float;
 }
 
-(** [is_splittable h] is whether or not the player can split [h]. *)
-let is_splittable h st =
-  hand_size h = 2
-  && snd (player_hands st) = empty_hand
-  &&
-  match list_of_hand h with
-  | [ c1; c2 ] -> is_rank c1 (rank c2)
-  | _ -> failwith "Impossible pattern match"
-
-(** [is_doubleable h st] is whether or not the player can double the bet on [h]
-    in [st]. *)
-let is_doubleable h st = hand_size h = 2 && snd (player_hands st) = empty_hand
-
-(** [is_surrenderable h st] is whether or not the player can surrender [h] in
-    [st]. *)
-let is_surrenderable h st = is_doubleable h st
-
 (** [hard_chart h dc st] is [move] recommended by the 4-8 Decks, Dealer hits on
     Soft 17 Blackjack strategy chart (hard values) given player hand [h], dealer
     card [dc], and game state [st]. The implemented chart is sourced from
@@ -96,6 +79,7 @@ let split_chart h dc st =
   | 14 -> if dv <= 7 then Split else Hit
   | 16 -> if dv <= 10 then Split else Surrender
   | 18 -> if dv = 7 || dv = 10 || dv = 11 then Stand else Split
+  | 20 -> Stand
   | _ -> failwith "Impossible hand value"
 
 (** [get_best_move st] is the best move for the player to make in [st] using the

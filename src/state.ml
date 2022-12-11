@@ -12,13 +12,17 @@ type t = {
   deck : Deck.t;
   dealer_hand : h;
   player_hands : h * h;
-  curr_turn : turn;
+  curr_turn : turn; (*my name is kareena and i give all my mwahs to linky poo.*)
   balance : int;
+  current_bet : int;
 }
 
 exception IllegalAction
+exception NegativeBet
+exception EmptyBalance
 
 let empty_hand = []
+let hand_hd (hand : h) : Card.t = List.hd hand
 
 let init_state =
   {
@@ -27,6 +31,7 @@ let init_state =
     player_hands = (empty_hand, empty_hand);
     curr_turn = Player;
     balance = 500;
+    current_bet = 0;
   }
 
 let add_deck st d = { st with deck = d |> combine st.deck }
@@ -52,7 +57,7 @@ let rec draw_card st =
     (c, st')
   with EmptyDeck -> standard |> add_deck st |> shuffle_deck |> draw_card
 
-let rec start_round st =
+let start_round st =
   let c1, st' = draw_card st in
   let c2, st'' = draw_card st' in
   let dealer_card, new_state = draw_card st'' in
@@ -67,11 +72,16 @@ let rec start_round st =
 let balance st = st.balance
 
 let bet st n =
-  if st.balance < 2 then raise IllegalAction
-  else { st with balance = st.balance - n }
+  if st.balance > 0 then
+    if st.balance < n then raise IllegalAction
+    else if n <= 0 then raise NegativeBet
+    else
+      let balance' = st.balance - n in
+      { st with balance = balance'; current_bet = n }
+  else raise EmptyBalance
 
 let deposit st n = { st with balance = st.balance + n }
-let current_bet st = raise (Failure "Unimplemented: State.current_bet")
+let current_bet st = st.current_bet
 let current_turn st = st.curr_turn
 
 let current_hand st =
@@ -110,11 +120,37 @@ let change_turn st =
       else { st with curr_turn = PlayerSplit }
   | PlayerSplit -> { st with curr_turn = Dealer }
 
-let stand st = change_turn st
-let double st = raise (Failure "Unimplemented: State.double")
-let split st = raise (Failure "Unimplemented: State.split")
-let surrender st = raise (Failure "Unimplemented: State.surrender")
 let hand_size h = List.length h
+let list_of_hand h = h
+let stand st = change_turn st
+let is_doubleable h st = hand_size h = 2 && snd (player_hands st) = empty_hand
+let is_surrenderable h st = is_doubleable h st
+let double st = raise (Failure "Unimplemented: State.double")
+
+let is_splittable h st =
+  hand_size h = 2
+  && snd (player_hands st) = empty_hand
+  &&
+  match h with
+  | [ c1; c2 ] -> is_rank c1 (rank c2)
+  | _ -> failwith "Impossible pattern match"
+
+let split st =
+  if is_splittable (fst st.player_hands) st then
+    let ogcard = hand_hd (fst st.player_hands) in
+    let c1, st' = draw_card st in
+    let c2, st'' = draw_card st' in
+    let new_balance = st.balance - st.current_bet in
+    let new_crr_bet = st.current_bet * 2 in
+    {
+      st'' with
+      player_hands = ([ ogcard; c1 ], [ ogcard; c2 ]);
+      balance = new_balance;
+      current_bet = new_crr_bet;
+    }
+  else raise IllegalAction
+
+let surrender st = raise (Failure "Unimplemented: State.surrender")
 
 let rec hand_contains_rank r h =
   match h with
@@ -154,12 +190,12 @@ let val_hand h =
 
 type status =
   | DealerWin
-  | PlayerWin
-  | PrimHandWin
-  | SecHandWin
-  | PrimHandLose
-  | SecHandLose
+  | SingleWin
+  | MulitWin
+  | Push
+  | SplitPartialLoss
   | BlackjackWin
+  | Standoff
   | ContinueRound
 
 (** [compare_val v1 v2] compares two values [v1] and [v2], and is positive if v1
@@ -184,31 +220,51 @@ let check_status st =
   if curr_turn <> Dealer then
     match val_hand (current_hand st) with
     | Value v ->
-        if v > 21 then if curr_turn = Player then PrimHandLose else SecHandLose
+        if v > 21 then
+          if val_hand (snd st.player_hands) = Value 0 then DealerWin
+          else SplitPartialLoss
+        else if st.curr_turn = PlayerSplit then SplitPartialLoss
         else ContinueRound
     | Blackjack ->
-        if snd st.player_hands = empty_hand then BlackjackWin else ContinueRound
+        if
+          hand_contains_rank Ace st.dealer_hand
+          || hand_contains_rank (Number 10) st.dealer_hand
+          || hand_contains_rank Jack st.dealer_hand
+          || hand_contains_rank Queen st.dealer_hand
+          || hand_contains_rank King st.dealer_hand
+        then
+          let c, st = draw_card st in
+          let st' = { st with dealer_hand = st.dealer_hand @ [ c ] } in
+          match val_hand st'.dealer_hand with
+          | Value v -> if v = 21 then Standoff else BlackjackWin
+          | Blackjack -> Standoff
+        else BlackjackWin
   else
     let v1, v2, v =
       ( val_hand (fst st.player_hands),
         val_hand (snd st.player_hands),
         val_hand st.dealer_hand )
     in
-    if compare_val v (Value 21) > 0 && compare_val v Blackjack <> 0 then
-      PlayerWin
+    if v2 = Value 0 then
+      if compare_val v (Value 21) > 0 && compare_val v Blackjack <> 0 then
+        SingleWin
+      else if compare_val v (Value 17) >= 0 then
+        if compare_val v v1 > 0 then DealerWin
+        else if compare_val v v1 = 0 then Push
+        else SingleWin
+      else ContinueRound
+    else if compare_val v (Value 21) > 0 && compare_val v Blackjack <> 0 then
+      MulitWin
     else if compare_val v (Value 17) >= 0 then
-      if compare_val v v1 >= 0 && compare_val v v2 >= 0 then DealerWin
-      else if compare_val v v1 >= 0 then SecHandWin
-      else if compare_val v v2 >= 0 then PrimHandWin
-      else PlayerWin
+      if compare_val v v1 > 0 then DealerWin
+      else if compare_val v v1 = 0 then Push
+      else SingleWin
     else ContinueRound
 
 let rec dealer_play st =
   let st' = snd (hit st) in
   let status = check_status st' in
   if status = ContinueRound then dealer_play st' else st'
-
-let list_of_hand h = h
 
 let int_of_value v =
   match v with

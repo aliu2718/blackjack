@@ -28,8 +28,11 @@ let extract_int = function
 let parse str =
   match String.split_on_char ' ' str |> remove_whitespace with
   | [] -> raise Empty
+  | [ "double" ] -> Double
+  | [ "surrender" ] -> Surrender
   | [ "hit" ] -> Hit
   | [ "stand" ] -> Stand
   | [ "quit" ] -> Quit
   | [ "evaluate" ] -> Evaluate
+  | [ "split" ] -> Split
   | _ -> raise Malformed
