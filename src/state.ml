@@ -150,7 +150,10 @@ let split st =
     }
   else raise IllegalAction
 
-let surrender st = raise (Failure "Unimplemented: State.surrender")
+let surrender st =
+  if is_surrenderable (fst st.player_hands) st then
+    { st with balance = st.balance + (current_bet st / 2) }
+  else raise IllegalAction
 
 let rec hand_contains_rank r h =
   match h with

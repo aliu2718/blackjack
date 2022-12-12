@@ -80,7 +80,7 @@ let blackjack_prompt st =
      #################################################################################\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n";
-  let st' = deposit st (current_bet st * 2) in
+  let st' = deposit st (current_bet st * (3 / 2)) in
   st'
 
 (** [standoff_prompt ()] prints a prompt for when the player hits a Blackjack
@@ -186,6 +186,20 @@ let split_prompt st =
     print_hands st;
     st
 
+(** [surrender_prompt st] prints a prompt for when the player surrenders their
+    hand. *)
+let surrender_prompt st =
+  try
+    let st' = surrender st in
+    ANSITerminal.print_string [ ANSITerminal.red ]
+      "\n\nYou have surrendered!\n\n";
+    st' |> new_round_prompt
+  with IllegalAction ->
+    ANSITerminal.print_string [ ANSITerminal.red ]
+      "\n\nUnable to surrender. You must have a hand with two cards.\n\n";
+    print_hands st;
+    st
+
 (** [dealer_end_prompt st] prints the prompt corresponding to the current state
     of the Blackjack game after the dealer has finished playing their turn. *)
 let dealer_end_prompt st =
@@ -207,6 +221,16 @@ let dealer_end_prompt st =
       ANSITerminal.print_string [ ANSITerminal.red ]
         "\nYou lost. The Dealer's hand was better than your hand this round.\n";
       incr losses;
+      ANSITerminal.print_string [ ANSITerminal.magenta ]
+        "\n\n\
+         #################################################################################\n";
+      ANSITerminal.print_string [ ANSITerminal.yellow ]
+        "Starting a new round...\n\n";
+      st
+  | Push ->
+      ANSITerminal.print_string [ ANSITerminal.red ]
+        "\n\
+         You've tied with the dealer. Nobody had the better hand this round.\n";
       ANSITerminal.print_string [ ANSITerminal.magenta ]
         "\n\n\
          #################################################################################\n";
@@ -283,7 +307,7 @@ let rec main_prompt st =
       | Evaluate ->
           print_endline (string_of_evaluation ());
           main_prompt st
-      | Surrender -> failwith "todo"
+      | Surrender -> surrender_prompt st |> main_prompt
       | Double -> failwith "todo"
       | _ -> raise (Failure "Unimplemented")
     end
