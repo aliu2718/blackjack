@@ -125,7 +125,12 @@ let list_of_hand h = h
 let stand st = change_turn st
 let is_doubleable h st = hand_size h = 2 && snd (player_hands st) = empty_hand
 let is_surrenderable h st = is_doubleable h st
-let double st = raise (Failure "Unimplemented: State.double")
+
+let double st =
+  if is_doubleable (fst st.player_hands) st then
+    let st' = bet st (current_bet st) in
+    { st' with current_bet = st'.current_bet * 2 }
+  else raise IllegalAction
 
 let is_splittable h st =
   hand_size h = 2

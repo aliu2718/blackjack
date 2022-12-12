@@ -122,7 +122,7 @@ let rec bet_prompt st =
       | NegativeBet ->
           let () =
             ANSITerminal.print_string [ ANSITerminal.red ]
-              "\nYou must bet more then 0.\n"
+              "\nYou must bet more than 0.\n"
           in
           bet_prompt st
       | EmptyBalance -> emptybal_prompt ())
@@ -130,6 +130,17 @@ let rec bet_prompt st =
       ANSITerminal.print_string [ ANSITerminal.red ]
         "\nYou have entered an invalid value. Please try again.\n\n";
       bet_prompt st
+
+(** [double_prompt st] prints a prompt for when the player doubles their bet. *)
+let double_prompt st =
+  let st' = double st in
+  ANSITerminal.print_string [ ANSITerminal.green ]
+    "\n\nDoubling your bet...\n\n";
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    ("\nYour bet is now $" ^ string_of_int (st' |> current_bet) ^ ".\n\n");
+  ANSITerminal.print_string [ ANSITerminal.red ]
+    ("\nYou have $" ^ string_of_int (st' |> balance) ^ " remaining.\n\n");
+  st'
 
 (** [new_round_prompt st] is the new state resulting from starting a new round.
     It also handles start the round and provides information about the new
@@ -147,7 +158,7 @@ let rec new_round_prompt st =
   let st' = start_round st |> update_evaluation_new_round in
   let st' = bet_prompt st' in
   ANSITerminal.print_string [ ANSITerminal.blue ]
-    ("Current Bet: " ^ string_of_int (current_bet st') ^ "\n\n");
+    ("Current Bet: $" ^ string_of_int (current_bet st') ^ "\n\n");
   print_hands st';
   if check_status st' = BlackjackWin then
     let st' = blackjack_prompt st' in
@@ -193,6 +204,7 @@ let surrender_prompt st =
     let st' = surrender st in
     ANSITerminal.print_string [ ANSITerminal.red ]
       "\n\nYou have surrendered!\n\n";
+    incr losses;
     st' |> new_round_prompt
   with IllegalAction ->
     ANSITerminal.print_string [ ANSITerminal.red ]
@@ -207,36 +219,36 @@ let dealer_end_prompt st =
   | SingleWin ->
       ANSITerminal.print_string [ ANSITerminal.green ]
         "\n\
-         You won! Your hand was better than the Dealer's this round!\n\
-         Paying out bet!\n";
+         You won! Your hand was better than the Dealer's!\n\
+         Paying out bet...\n";
       incr wins;
       ANSITerminal.print_string [ ANSITerminal.magenta ]
-        "\n\n\
-         #################################################################################\n";
+        "\n\
+         #################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
       let st' = deposit st (current_bet st * 2) in
       st'
   | DealerWin ->
       ANSITerminal.print_string [ ANSITerminal.red ]
-        "\nYou lost. The Dealer's hand was better than your hand this round.\n";
+        "\nYou lost. The Dealer's hand was better than yours.\n";
       incr losses;
       ANSITerminal.print_string [ ANSITerminal.magenta ]
-        "\n\n\
-         #################################################################################\n";
+        "\n\
+         #################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
       st
   | Push ->
       ANSITerminal.print_string [ ANSITerminal.red ]
-        "\n\
-         You've tied with the dealer. Nobody had the better hand this round.\n";
+        "\nYou've tied with the dealer. Nobody had the better hand.\n";
       ANSITerminal.print_string [ ANSITerminal.magenta ]
-        "\n\n\
-         #################################################################################\n";
+        "\n\
+         #################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
-      st
+      let st' = deposit st (current_bet st) in
+      st'
   | _ -> raise (Failure "Unimplemented")
 
 (** [dealer_prompt st] is the new state resulting from the dealer playing. It
@@ -308,7 +320,13 @@ let rec main_prompt st =
           print_endline (string_of_evaluation ());
           main_prompt st
       | Surrender -> surrender_prompt st |> main_prompt
-      | Double -> failwith "todo"
+      | Double -> (
+          match double_prompt st with
+          | exception _ ->
+              ANSITerminal.print_string [ ANSITerminal.red ]
+                "\n\nUnable to double. Check that you have enough money!\n\n";
+              main_prompt st
+          | st' -> main_prompt st')
       | _ -> raise (Failure "Unimplemented")
     end
 
