@@ -427,6 +427,9 @@ let start_round_tests =
       double_standard_state (101, 2, 1);
   ]
 
+let bet_state_1 = bet standard_state 200
+let bet_state_2 = bet bet_state_1 300
+
 (** [bet_test name st n expected_output] constructs an OUnit test named [name]
     that asserts the quality of [expected_output] with the balance of
     [State.bet st n]. *)
@@ -435,7 +438,26 @@ let bet_test (name : string) (st : State.t) (n : int) (expected_output : int) :
   name >:: fun _ -> assert_equal expected_output (bet st n |> balance)
 
 let bet_tests =
-  [ bet_test "bet from initial primitive state" init_state 400 600 ]
+  [
+    bet_test "bet from standard_state" standard_state 200 300;
+    bet_test "bet from bet_state_1" bet_state_1 300 0;
+    ( "bet_state_2 is broke" >:: fun _ ->
+      assert_raises EmptyBalance (fun () -> bet bet_state_2 1 |> balance) );
+  ]
+
+(** [deposit_test name st n expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with the balance of
+    [State.deposit st n]. *)
+let deposit_test (name : string) (st : State.t) (n : int)
+    (expected_output : int) : test =
+  name >:: fun _ -> assert_equal expected_output (deposit st n |> balance)
+
+let deposit_tests =
+  [
+    deposit_test "deposit from standard_state" standard_state 400 900;
+    deposit_test "deposit from bet_state_1" bet_state_1 1000 1300;
+    deposit_test "deposit from bet_state_2" bet_state_2 300 300;
+  ]
 
 (** [val_hand_test name st d expected_output] constructs an OUnit test named
     [name] that asserts the quality of [expected_output] with
@@ -455,6 +477,8 @@ let state_tests =
       player_hands_tests;
       add_deck_tests;
       start_round_tests;
+      bet_tests;
+      deposit_tests;
       val_hand_tests;
     ]
 
