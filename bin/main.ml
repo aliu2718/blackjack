@@ -303,7 +303,7 @@ let hand1l_prompt st =
   st' |> update_evaluation_idle
 
 (** [hand2l_prompt st] is the new state resulting from the player going bust on
-    their first hand during a split play. It also handles printing relevant
+    their second hand during a split play. It also handles printing relevant
     information for the action. *)
 let hand2l_prompt st =
   ANSITerminal.print_string [ ANSITerminal.red ]
