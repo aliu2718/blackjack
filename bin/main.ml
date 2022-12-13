@@ -79,7 +79,7 @@ let blackjack_prompt st =
      ################################################################################################\n\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n";
-  let st' = deposit st (current_bet st * (3 / 2)) in
+  let st' = deposit st (current_bet st * 2) in
   st'
 
 let rec bet_prompt st =
@@ -118,14 +118,40 @@ let rec bet_prompt st =
 
 (** [double_prompt st] prints a prompt for when the player doubles their bet. *)
 let double_prompt st =
-  let st' = double st in
-  ANSITerminal.print_string [ ANSITerminal.green ]
-    "\n\nDoubling your bet...\n\n";
-  ANSITerminal.print_string [ ANSITerminal.magenta ]
-    ("\nYour bet is now $" ^ string_of_int (st' |> current_bet) ^ ".\n\n");
-  ANSITerminal.print_string [ ANSITerminal.red ]
-    ("\nYou have $" ^ string_of_int (st' |> balance) ^ " remaining.\n\n");
-  st'
+  try
+    let st' = double st in
+    ANSITerminal.print_string [ ANSITerminal.green ]
+      "\n\nDoubling your bet...\n\n";
+    ANSITerminal.print_string [ ANSITerminal.magenta ]
+      ("\nYour bet is now $" ^ string_of_int (st' |> current_bet) ^ ".\n\n");
+    ANSITerminal.print_string [ ANSITerminal.red ]
+      ("\nYou have $" ^ string_of_int (st' |> balance) ^ " remaining.\n\n");
+    print_hands st;
+    st'
+  with
+  | IllegalAction ->
+      let () =
+        ANSITerminal.print_string [ ANSITerminal.red ]
+          "\n\n\
+           Unable to double. You must have enough money and have only your \
+           first two cards.\n\n"
+      in
+      print_hands st;
+      st
+  | NegativeBet ->
+      let () =
+        ANSITerminal.print_string [ ANSITerminal.red ]
+          "\nYou must bet more than 0.\n\n"
+      in
+      print_hands st;
+      st
+  | EmptyBalance ->
+      let () =
+        ANSITerminal.print_string [ ANSITerminal.red ]
+          "\nYou can't double with an empty balance!\n\n"
+      in
+      print_hands st;
+      st
 
 (** [new_round_prompt st] is the new state resulting from starting a new round.
     It also handles start the round and provides information about the new
@@ -342,12 +368,22 @@ let rec main_prompt st =
           main_prompt st
       | Surrender -> surrender_prompt st |> main_prompt
       | Double -> (
-          match double_prompt st with
-          | exception _ ->
-              ANSITerminal.print_string [ ANSITerminal.red ]
-                "\n\nUnable to double. Check that you have enough money!\n\n";
-              main_prompt st
-          | st' -> main_prompt st')
+          match double st with
+          | exception _ -> st |> double_prompt |> main_prompt
+          | _ -> (
+              let st' =
+                st |> double_prompt |> hit_prompt
+                |> update_evaluation_curr_round
+              in
+              match check_status st' with
+              | DealerWin ->
+                  let () = busted_prompt () in
+                  new_round_prompt st' |> main_prompt
+              | BlackjackWin ->
+                  let st' = blackjack_prompt st in
+                  new_round_prompt st' |> main_prompt
+              | ContinueRound -> st' |> stand_prompt |> main_prompt
+              | _ -> raise (Failure "Unimplemented")))
       | _ -> raise (Failure "Unimplemented")
     end
 
