@@ -12,7 +12,7 @@ type t = {
   deck : Deck.t;
   dealer_hand : h;
   player_hands : h * h;
-  curr_turn : turn; (*my name is kareena and i give all my mwahs to linky poo.*)
+  curr_turn : turn;
   balance : int;
   current_bet : int;
   firsthandl : bool;
@@ -129,8 +129,14 @@ let change_turn st =
 let hand_size h = List.length h
 let list_of_hand h = h
 let stand st = change_turn st
-let is_doubleable h st = hand_size h = 2 && snd (player_hands st) = empty_hand
-let is_surrenderable h st = is_doubleable h st
+
+let is_doubleable h st =
+  hand_size h = 2
+  && snd (player_hands st) = empty_hand
+  && st.current_bet <= st.balance
+
+let is_surrenderable h st =
+  hand_size h = 2 && snd (player_hands st) = empty_hand
 
 let double st =
   if is_doubleable (fst st.player_hands) st then
@@ -139,8 +145,7 @@ let double st =
   else raise IllegalAction
 
 let is_splittable h st =
-  hand_size h = 2
-  && snd (player_hands st) = empty_hand
+  is_doubleable h st
   &&
   match h with
   | [ c1; c2 ] -> is_rank c1 (rank c2)
@@ -148,14 +153,17 @@ let is_splittable h st =
 
 let split st =
   if is_splittable (fst st.player_hands) st then
-    let ogcard = hand_hd (fst st.player_hands) in
+    let ogc1, ogc2 =
+      ( st.player_hands |> fst |> hand_hd,
+        st.player_hands |> fst |> List.tl |> hand_hd )
+    in
     let c1, st' = draw_card st in
     let c2, st'' = draw_card st' in
     let new_balance = st.balance - st.current_bet in
     let new_crr_bet = st.current_bet * 2 in
     {
       st'' with
-      player_hands = ([ ogcard; c1 ], [ ogcard; c2 ]);
+      player_hands = ([ ogc1; c1 ], [ ogc2; c2 ]);
       balance = new_balance;
       current_bet = new_crr_bet;
     }

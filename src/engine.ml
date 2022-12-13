@@ -118,10 +118,7 @@ let new_card_count c =
   then evaluation.card_count + 1
   else evaluation.card_count
 
-(** [update_evaluation_help st] updates the stored evaluation based on [st].
-    However, only the deck size, number of decks, true count, best move, and bet
-    size are updated. *)
-let update_evaluation_help st =
+let update_evaluation_idle st =
   let deck_size = deck_size st in
   evaluation.deck_size <- deck_size;
   evaluation.num_decks <- float_of_int deck_size /. 52.;
@@ -142,7 +139,7 @@ let update_evaluation_curr_round st =
     st |> current_hand |> list_of_hand |> List.rev |> List.hd
   in
   evaluation.card_count <- new_card_count most_recent_card;
-  update_evaluation_help st
+  update_evaluation_idle st
 
 let update_evaluation_new_round st =
   let card_list =
@@ -152,14 +149,27 @@ let update_evaluation_new_round st =
   List.fold_left
     (fun acc c -> evaluation.card_count <- new_card_count c)
     () card_list;
-  update_evaluation_help st
+  update_evaluation_idle st
 
 let update_evaluation_dealer st =
   let card_list = st |> dealer_hand |> list_of_hand |> List.tl in
   List.fold_left
     (fun acc c -> evaluation.card_count <- new_card_count c)
     () card_list;
-  update_evaluation_help st
+  update_evaluation_idle st
+
+let update_evaluation_split st =
+  let prim, split = st |> player_hands in
+  let new_cards =
+    [
+      prim |> list_of_hand |> List.tl |> List.hd;
+      split |> list_of_hand |> List.tl |> List.hd;
+    ]
+  in
+  List.fold_left
+    (fun acc c -> evaluation.card_count <- new_card_count c)
+    () new_cards;
+  update_evaluation_idle st
 
 (** [string_of_move m] is a string representation of move [m]. *)
 let string_of_move m =

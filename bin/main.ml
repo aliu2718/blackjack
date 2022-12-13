@@ -23,9 +23,9 @@ let quit_prompt () =
   Stdlib.exit 0
 
 let emptybal_prompt () =
-  ANSITerminal.print_string [ ANSITerminal.magenta ]
+  ANSITerminal.print_string [ ANSITerminal.red ]
     "\n\
-     Uh oh! You have run out of money! Thank you for playing! Exiting the \
+     Oh no! You have run out of money! Thank you for playing! Exiting the \
      session...\n";
   Stdlib.exit 0
 
@@ -85,8 +85,9 @@ let blackjack_prompt st =
 let rec bet_prompt st =
   print_string "\nYour current balance is: ";
   ANSITerminal.print_string [ ANSITerminal.blue ]
-    ("$" ^ string_of_int (balance st) ^ ".\n\n");
-  print_endline "How much would you like to bet? Enter an integer.";
+    ("$" ^ string_of_int (balance st) ^ ".\n");
+  if balance st <= 0 then emptybal_prompt ()
+  else print_endline "\nHow much would you like to bet? Enter an integer.";
   print_string "> ";
   match int_of_string (read_line ()) with
   | x -> (
@@ -121,9 +122,10 @@ let double_prompt st =
   try
     let st' = double st in
     ANSITerminal.print_string [ ANSITerminal.green ]
-      "\n\nDoubling your bet...\n\n";
-    ANSITerminal.print_string [ ANSITerminal.magenta ]
-      ("\nYour bet is now $" ^ string_of_int (st' |> current_bet) ^ ".\n\n");
+      "\n\nDoubling your bet...\n";
+    print_string "\nYour total bet is now: ";
+    ANSITerminal.print_string [ ANSITerminal.blue ]
+      ("$" ^ string_of_int (st' |> current_bet) ^ "\n");
     ANSITerminal.print_string [ ANSITerminal.red ]
       ("\nYou have $" ^ string_of_int (st' |> balance) ^ " remaining.\n\n");
     print_hands st;
@@ -132,23 +134,23 @@ let double_prompt st =
   | IllegalAction ->
       let () =
         ANSITerminal.print_string [ ANSITerminal.red ]
-          "\n\n\
-           Unable to double. You must have enough money and have only your \
-           first two cards.\n\n"
+          "\n\
+           Unable to double. You must have enough money, and you cannot have \
+           already taken an action.\n\n"
       in
       print_hands st;
       st
   | NegativeBet ->
       let () =
         ANSITerminal.print_string [ ANSITerminal.red ]
-          "\nYou must bet more than 0.\n\n"
+          "\nYou must bet more than $0.\n\n"
       in
       print_hands st;
       st
   | EmptyBalance ->
       let () =
         ANSITerminal.print_string [ ANSITerminal.red ]
-          "\nYou can't double with an empty balance!\n\n"
+          "\nYou cannot double with an empty balance.\n\n"
       in
       print_hands st;
       st
@@ -165,11 +167,12 @@ let rec new_round_prompt st =
   ANSITerminal.print_string [ ANSITerminal.green ]
     ("Wins: " ^ string_of_int !wins ^ "\n");
   ANSITerminal.print_string [ ANSITerminal.red ]
-    ("Losses: " ^ string_of_int !losses ^ "\n\n");
+    ("Losses: " ^ string_of_int !losses ^ "\n");
   let st' = start_round st |> update_evaluation_new_round in
   let st' = bet_prompt st' in
+  print_string "Current Bet: ";
   ANSITerminal.print_string [ ANSITerminal.blue ]
-    ("Current Bet: $" ^ string_of_int (current_bet st') ^ "\n\n");
+    ("$" ^ string_of_int (current_bet st') ^ "\n\n");
   print_hands st';
   if check_status st' = BlackjackWin then
     let st' = blackjack_prompt st' in
@@ -192,22 +195,23 @@ let hit_prompt st =
     action. *)
 let split_prompt st =
   try
-    let st' = split st in
+    let st' = split st |> update_evaluation_split in
     ANSITerminal.print_string [ ANSITerminal.magenta ]
-      "\n\nSplitting the deck...\n\n";
-    ANSITerminal.print_string [ ANSITerminal.magenta ]
-      ("\nYour bet is now $"
-      ^ string_of_int (st' |> current_bet)
-      ^ ". With half on each hand.\n\n");
-    ANSITerminal.print_string [ ANSITerminal.red ]
-      ("\nYou have $" ^ string_of_int (st' |> balance) ^ " remaining.\n\n");
+      "\nSplitting the deck...\n";
+    print_string "\nYour total bet is now: ";
+    ANSITerminal.print_string [ ANSITerminal.blue ]
+      ("$" ^ string_of_int (st' |> current_bet));
+    print_string " (half on each hand)";
+    print_string "\nYour current balance is: ";
+    ANSITerminal.print_string [ ANSITerminal.blue ]
+      ("$" ^ string_of_int (balance st) ^ ".\n\n");
     print_hands st';
     st'
   with IllegalAction ->
     ANSITerminal.print_string [ ANSITerminal.red ]
-      "\n\n\
+      "\n\
        Unable to split. You must have a hand with two cards of the same rank \
-       from the initial deal. \n\n";
+       from the initial deal, and you must have enough money.\n\n";
     print_hands st;
     st
 
@@ -221,7 +225,7 @@ let surrender_prompt st =
       "\n\
        ################################################################################################\n\n";
     ANSITerminal.print_string [ ANSITerminal.yellow ]
-      "Starting a new round...\n\n";
+      "Starting a new round...\n";
     incr losses;
     st' |> new_round_prompt
   with IllegalAction ->
@@ -244,7 +248,7 @@ let dealer_end_prompt st =
         "\n\
          ################################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
-        "Starting a new round...\n\n";
+        "Starting a new round...\n";
       let st' = deposit st (current_bet st * 2) in
       st'
   | DealerWin ->
@@ -255,17 +259,17 @@ let dealer_end_prompt st =
         "\n\
          ################################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
-        "Starting a new round...\n\n";
+        "Starting a new round...\n";
       st
   | MultiWin ->
       ANSITerminal.print_string [ ANSITerminal.green ]
-        "\nYou won Big! Both of your hands won!\n";
+        "\nYou won big! Both of your hands won!\n";
       incr wins;
       ANSITerminal.print_string [ ANSITerminal.magenta ]
         "\n\
          ################################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
-        "Starting a new round...\n\n";
+        "Starting a new round...\n";
       let st' = deposit st (current_bet st * 2) in
       st'
   | _ -> raise (Failure "Unimplemented")
@@ -284,24 +288,25 @@ let dealer_prompt st =
     their first hand during a split play. It also handles printing relevant
     information for the action. *)
 let hand1l_prompt st =
-  ANSITerminal.print_string [ ANSITerminal.magenta ]
+  ANSITerminal.print_string [ ANSITerminal.red ]
     "\nYour first hand was a bust!\n";
   let st' = firsthandloss st in
-  ANSITerminal.print_string [ ANSITerminal.magenta ]
-    ("\nYour bet is now $" ^ string_of_int (st' |> current_bet) ^ ".\n\n");
+  print_string "\nYour total bet is now: ";
+  ANSITerminal.print_string [ ANSITerminal.blue ]
+    ("$" ^ string_of_int (st' |> current_bet) ^ "\n\n");
   let st' = stand st' in
   let () =
     ANSITerminal.print_string [ ANSITerminal.yellow ]
       "Now playing your second hand...\n"
   in
   print_hands st';
-  st'
+  st' |> update_evaluation_idle
 
 (** [hand2l_prompt st] is the new state resulting from the player going bust on
     their first hand during a split play. It also handles printing relevant
     information for the action. *)
 let hand2l_prompt st =
-  ANSITerminal.print_string [ ANSITerminal.magenta ]
+  ANSITerminal.print_string [ ANSITerminal.red ]
     "\nYour second hand was a bust!\n";
   let st' = secondhandloss st in
   ANSITerminal.print_string [ ANSITerminal.magenta ]
@@ -322,10 +327,10 @@ let stand_prompt st =
   else
     let () =
       ANSITerminal.print_string [ ANSITerminal.yellow ]
-        "Now playing your second hand...\n"
+        "Now playing your second hand...\n\n"
     in
     print_hands st';
-    st'
+    st' |> update_evaluation_idle
 
 (** [main_prompt st] handles the player's inputs and prints the appropriate
     prompts corresponding to the parsed inputs. *)
@@ -340,11 +345,11 @@ let rec main_prompt st =
       match parse input with
       | exception Empty ->
           ANSITerminal.print_string [ ANSITerminal.red ]
-            "\nYou have not entered an action. Please try again.\n\n";
+            "\nYou have not entered an action. Please try again.\n";
           main_prompt st
       | exception Malformed ->
           ANSITerminal.print_string [ ANSITerminal.red ]
-            "\nYou have entered an invalid action. Please try again.\n\n";
+            "\nYou have entered an invalid action. Please try again.\n";
           main_prompt st
       | Quit -> quit_prompt ()
       | Hit -> (
@@ -363,6 +368,7 @@ let rec main_prompt st =
       | Stand -> stand_prompt st |> main_prompt
       | Split -> split_prompt st |> main_prompt
       | Evaluate ->
+          let _ = update_evaluation_idle in
           ANSITerminal.print_string [ ANSITerminal.yellow ]
             (string_of_evaluation () ^ "\n");
           main_prompt st

@@ -17,8 +17,8 @@ exception NegativeBet
 (** Raised when a bet that is <=0 is placed in the Blackjack game state. *)
 
 exception EmptyBalance
-(** Raised when a bet is placed when the player has zero balancein the Blackjack
-    game state. *)
+(** Raised when a bet is placed when the player has zero balance in the
+    Blackjack game state. *)
 
 val empty_hand : h
 (** [empty_hand] is a hand with no cards. *)

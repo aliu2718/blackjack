@@ -18,6 +18,12 @@ type t
     consisting of information such as the best move, factor at which to bet,
     number of cards/decks in the state, and card/true counts. *)
 
+val update_evaluation_idle : State.t -> State.t
+(** [update_evaluation_idle st] updates the stored evaluation based on [st]. The
+    evaluation is updated when no new cards have been played, i.e. only the deck
+    size, number of decks, true count, best move, and bet size are updated. The
+    result is [st], which is left unchanged. *)
+
 val update_evaluation_curr_round : State.t -> State.t
 (** [update_evaluation_curr_round st] updates the stored evaluation based on
     [st]. The evaluation is updated everytime after a card is drawn and the
@@ -30,8 +36,14 @@ val update_evaluation_new_round : State.t -> State.t
 
 val update_evaluation_dealer : State.t -> State.t
 (** [update_evaluation_dealer st] updates the stored evaluation based on [st].
-    The evaluationis updated everytime after the dealer hits the deck during
+    The evaluation is updated everytime after the dealer hits the deck during
     their turn. The result is [st], which is left unchanged. *)
+
+val update_evaluation_split : State.t -> State.t
+(** [update_evaluation_split st] updates the stored evaluation based on [st].
+    The evaluation is updated everytime after a split has occurred, and two
+    additional cards have entered play. The result is [st], which is left
+    unchanged. *)
 
 val string_of_evaluation : unit -> string
 (** [string_of_summary ()] is a string representation of the stored evaluation
