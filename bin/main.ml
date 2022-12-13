@@ -79,7 +79,7 @@ let blackjack_prompt st =
      ################################################################################################\n\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n";
-  let st' = deposit st (current_bet st * 2) in
+  let st' = deposit st (current_bet st * 3) in
   st'
 
 let rec bet_prompt st =
@@ -368,7 +368,7 @@ let rec main_prompt st =
       | Stand -> stand_prompt st |> main_prompt
       | Split -> split_prompt st |> main_prompt
       | Evaluate ->
-          let _ = update_evaluation_idle in
+          let _ = update_evaluation_idle st in
           ANSITerminal.print_string [ ANSITerminal.yellow ]
             (string_of_evaluation () ^ "\n");
           main_prompt st

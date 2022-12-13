@@ -133,7 +133,7 @@ let stand st = change_turn st
 let is_doubleable h st =
   hand_size h = 2
   && snd (player_hands st) = empty_hand
-  && st.current_bet <= st.balance
+  && balance st - current_bet st >= 0
 
 let is_surrenderable h st =
   hand_size h = 2 && snd (player_hands st) = empty_hand

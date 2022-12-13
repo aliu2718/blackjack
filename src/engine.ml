@@ -68,10 +68,11 @@ let soft_chart h dc st =
 let split_chart h dc st =
   let v = int_of_value (val_hand h) in
   let dv = int_of_value (val_hand dc) in
+  let can_double = is_doubleable h st in
   match v with
   | 4 | 6 -> if dv >= 8 then Hit else Split
   | 8 -> Hit
-  | 10 -> if dv <= 9 then Double else Hit
+  | 10 -> if dv <= 9 && can_double then Double else Hit
   | 12 ->
       if hand_contains_rank Ace h then Split
       else if dv >= 3 && dv <= 6 then Split
