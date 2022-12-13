@@ -62,7 +62,7 @@ let print_hands st =
 
 (** [busted_prompt ()] prints a prompt for when the player busts their hand. *)
 let busted_prompt () =
-  ANSITerminal.print_string [ ANSITerminal.red ] "\nYour hand was a bust!\n";
+  ANSITerminal.print_string [ ANSITerminal.red ] "\nYou went bust!\n";
   incr losses;
   ANSITerminal.print_string [ ANSITerminal.magenta ]
     "\n\
@@ -70,8 +70,7 @@ let busted_prompt () =
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
-(** [blackjack_prompt ()] prints a prompt for when the player hits a Blackjack
-    and there is no standoff.*)
+(** [blackjack_prompt ()] prints a prompt for when the player hits a Blackjack.*)
 let blackjack_prompt st =
   ANSITerminal.print_string [ ANSITerminal.green ] "\nYou hit a Blackjack!\n";
   incr wins;
@@ -81,20 +80,6 @@ let blackjack_prompt st =
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n";
   let st' = deposit st (current_bet st * (3 / 2)) in
-  st'
-
-(** [standoff_prompt ()] prints a prompt for when the player hits a Blackjack
-    and there is a standoff *)
-let standoff_prompt st =
-  ANSITerminal.print_string [ ANSITerminal.yellow ]
-    "\n\
-     ################################################################################################\n\n";
-  ANSITerminal.print_string [ ANSITerminal.magenta ]
-    "\n\
-     ################################################################################################\n\n";
-  ANSITerminal.print_string [ ANSITerminal.yellow ]
-    "Starting a new round...\n\n";
-  let st' = deposit st (current_bet st) in
   st'
 
 let rec bet_prompt st =
@@ -163,9 +148,6 @@ let rec new_round_prompt st =
   if check_status st' = BlackjackWin then
     let st' = blackjack_prompt st' in
     new_round_prompt st'
-  else if check_status st' = Standoff then
-    let st' = standoff_prompt st' in
-    new_round_prompt st'
   else st'
 
 (** [hit_prompt st] is the new state resulting from the player playing the "hit"
@@ -187,6 +169,12 @@ let split_prompt st =
     let st' = split st in
     ANSITerminal.print_string [ ANSITerminal.magenta ]
       "\n\nSplitting the deck...\n\n";
+    ANSITerminal.print_string [ ANSITerminal.magenta ]
+      ("\nYour bet is now $"
+      ^ string_of_int (st' |> current_bet)
+      ^ ". With half on each hand.\n\n");
+    ANSITerminal.print_string [ ANSITerminal.red ]
+      ("\nYou have $" ^ string_of_int (st' |> balance) ^ " remaining.\n\n");
     print_hands st';
     st'
   with IllegalAction ->
@@ -224,9 +212,7 @@ let dealer_end_prompt st =
   match check_status st with
   | SingleWin ->
       ANSITerminal.print_string [ ANSITerminal.green ]
-        "\n\
-         You won! Your hand was better than the Dealer's!\n\
-         Paying out bet...\n";
+        "\nYou won! You were better than the Dealer!\nPaying out bet...\n";
       incr wins;
       ANSITerminal.print_string [ ANSITerminal.magenta ]
         "\n\
@@ -245,15 +231,16 @@ let dealer_end_prompt st =
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
       st
-  | Push ->
-      ANSITerminal.print_string [ ANSITerminal.red ]
-        "\nYou've tied with the dealer. Nobody had the better hand.\n";
+  | MultiWin ->
+      ANSITerminal.print_string [ ANSITerminal.green ]
+        "\nYou won Big! Both of your hands won!\n";
+      incr wins;
       ANSITerminal.print_string [ ANSITerminal.magenta ]
         "\n\
          ################################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
-      let st' = deposit st (current_bet st) in
+      let st' = deposit st (current_bet st * 2) in
       st'
   | _ -> raise (Failure "Unimplemented")
 
@@ -266,6 +253,37 @@ let dealer_prompt st =
   print_hands st';
   let st' = dealer_end_prompt st' in
   new_round_prompt st'
+
+(** [hand1l_prompt st] is the new state resulting from the player going bust on
+    their first hand during a split play. It also handles printing relevant
+    information for the action. *)
+let hand1l_prompt st =
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "\nYour first hand was a bust!\n";
+  let st' = firsthandloss st in
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    ("\nYour bet is now $" ^ string_of_int (st' |> current_bet) ^ ".\n\n");
+  let st' = stand st' in
+  let () =
+    ANSITerminal.print_string [ ANSITerminal.yellow ]
+      "Now playing your second hand...\n"
+  in
+  print_hands st';
+  st'
+
+(** [hand2l_prompt st] is the new state resulting from the player going bust on
+    their first hand during a split play. It also handles printing relevant
+    information for the action. *)
+let hand2l_prompt st =
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    "\nYour second hand was a bust!\n";
+  let st' = secondhandloss st in
+  ANSITerminal.print_string [ ANSITerminal.magenta ]
+    ("\nYour bet is now $"
+    ^ string_of_int (st' |> current_bet)
+    ^ ", remaining on your first hand.\n\n");
+  let st' = stand st' in
+  dealer_prompt st'
 
 (** [stand_prompt st] is the new state resulting from the player playing the
     "stand" action. It also handles printing relevant information for the
@@ -306,6 +324,8 @@ let rec main_prompt st =
       | Hit -> (
           let st' = st |> hit_prompt |> update_evaluation_curr_round in
           match check_status st' with
+          | Hand1L -> st' |> hand1l_prompt |> main_prompt
+          | Hand2L -> st' |> hand2l_prompt |> main_prompt
           | DealerWin ->
               let () = busted_prompt () in
               new_round_prompt st' |> main_prompt
@@ -313,12 +333,6 @@ let rec main_prompt st =
               let st' = blackjack_prompt st in
               new_round_prompt st' |> main_prompt
           | ContinueRound -> main_prompt st'
-          | Standoff ->
-              let st' = standoff_prompt st in
-              new_round_prompt st' |> main_prompt
-          | Push ->
-              let st' = standoff_prompt st in
-              new_round_prompt st' |> main_prompt
           | _ -> raise (Failure "Unimplemented"))
       | Stand -> stand_prompt st |> main_prompt
       | Split -> split_prompt st |> main_prompt

@@ -149,9 +149,9 @@ val val_hand : h -> value
 type status =
   | DealerWin
   | SingleWin
-  | MulitWin
-  | Push
-  | SplitPartialLoss
+  | MultiWin
+  | Hand1L
+  | Hand2L
   | BlackjackWin
   | Standoff
   | ContinueRound
@@ -174,3 +174,11 @@ val string_of_value : value -> string
 
 val string_of_hand : h -> string
 (** [string_of_hand h] is the string representation of hand [h]. *)
+
+val firsthandloss : t -> t
+(** [firsthandloss st] is the state resulting in tracking the loss of the first
+    hand during split play. *)
+
+val secondhandloss : t -> t
+(** [secondhandloss st] is the state resulting in tracking the loss of the
+    second hand during split play. *)

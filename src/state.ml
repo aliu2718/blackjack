@@ -15,6 +15,8 @@ type t = {
   curr_turn : turn; (*my name is kareena and i give all my mwahs to linky poo.*)
   balance : int;
   current_bet : int;
+  firsthandl : bool;
+  secondhandl : bool;
 }
 
 exception IllegalAction
@@ -32,6 +34,8 @@ let init_state =
     curr_turn = Player;
     balance = 500;
     current_bet = 0;
+    firsthandl = false;
+    secondhandl = false;
   }
 
 let add_deck st d = { st with deck = d |> combine st.deck }
@@ -67,6 +71,8 @@ let start_round st =
     dealer_hand = [ dealer_card ];
     player_hands = (new_player_hand, empty_hand);
     curr_turn = Player;
+    firsthandl = false;
+    secondhandl = false;
   }
 
 let balance st = st.balance
@@ -199,9 +205,9 @@ let val_hand h =
 type status =
   | DealerWin
   | SingleWin
-  | MulitWin
-  | Push
-  | SplitPartialLoss
+  | MultiWin
+  | Hand1L
+  | Hand2L
   | BlackjackWin
   | Standoff
   | ContinueRound
@@ -223,6 +229,10 @@ let compare_val v1 v2 =
       | Blackjack -> 0
     end
 
+(** [checkloss st] is a helper function used to check whether a hand was bust in
+    split play *)
+let checkloss st = st.firsthandl || st.secondhandl
+
 let check_status st =
   let curr_turn = st.curr_turn in
   if curr_turn <> Dealer then
@@ -230,8 +240,9 @@ let check_status st =
     | Value v ->
         if v > 21 then
           if val_hand (snd st.player_hands) = Value 0 then DealerWin
-          else SplitPartialLoss
-        else if st.curr_turn = PlayerSplit then SplitPartialLoss
+          else if st.curr_turn = Player then Hand1L
+          else if checkloss st then DealerWin
+          else Hand2L
         else ContinueRound
     | Blackjack ->
         if
@@ -257,16 +268,22 @@ let check_status st =
       if compare_val v (Value 21) > 0 && compare_val v Blackjack <> 0 then
         SingleWin
       else if compare_val v (Value 17) >= 0 then
-        if compare_val v v1 > 0 then DealerWin
-        else if compare_val v v1 = 0 then Push
-        else SingleWin
+        if compare_val v v1 >= 0 then DealerWin else SingleWin
       else ContinueRound
     else if compare_val v (Value 21) > 0 && compare_val v Blackjack <> 0 then
-      MulitWin
+      if checkloss st then SingleWin else MultiWin
     else if compare_val v (Value 17) >= 0 then
-      if compare_val v v1 > 0 then DealerWin
-      else if compare_val v v1 = 0 then Push
-      else SingleWin
+      if checkloss st then
+        if st.firsthandl then
+          if compare_val v v2 >= 0 then DealerWin else SingleWin
+        else if compare_val v v1 >= 0 then DealerWin
+        else SingleWin
+      else if compare_val v v1 >= 0 && compare_val v v2 >= 0 then DealerWin
+      else if
+        (compare_val v v1 >= 0 && compare_val v v2 < 0)
+        || (compare_val v v1 < 0 && compare_val v v2 >= 0)
+      then SingleWin
+      else MultiWin
     else ContinueRound
 
 let rec dealer_play st =
@@ -289,3 +306,11 @@ let rec string_of_hand h =
   | [] -> ""
   | [ c ] -> Card.string_of_card c
   | c :: t -> Card.string_of_card c ^ ", " ^ string_of_hand t
+
+let firsthandloss st =
+  let st' = { st with firsthandl = true; current_bet = st.current_bet / 2 } in
+  st'
+
+let secondhandloss st =
+  let st' = { st with current_bet = st.current_bet / 2 } in
+  st'
