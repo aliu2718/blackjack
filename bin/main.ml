@@ -65,8 +65,8 @@ let busted_prompt () =
   ANSITerminal.print_string [ ANSITerminal.red ] "\nYour hand was a bust!\n";
   incr losses;
   ANSITerminal.print_string [ ANSITerminal.magenta ]
-    "\n\n\
-     #################################################################################\n";
+    "\n\
+     ################################################################################################\n\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n"
 
@@ -76,8 +76,8 @@ let blackjack_prompt st =
   ANSITerminal.print_string [ ANSITerminal.green ] "\nYou hit a Blackjack!\n";
   incr wins;
   ANSITerminal.print_string [ ANSITerminal.magenta ]
-    "\n\n\
-     #################################################################################\n";
+    "\n\
+     ################################################################################################\n\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n";
   let st' = deposit st (current_bet st * (3 / 2)) in
@@ -88,10 +88,10 @@ let blackjack_prompt st =
 let standoff_prompt st =
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "\n\
-     You hit a Blackjack, but the dealer also has a Blackjack. It's a standoff!\n";
+     ################################################################################################\n\n";
   ANSITerminal.print_string [ ANSITerminal.magenta ]
-    "\n\n\
-     #################################################################################\n";
+    "\n\
+     ################################################################################################\n\n";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "Starting a new round...\n\n";
   let st' = deposit st (current_bet st) in
@@ -193,7 +193,7 @@ let split_prompt st =
     ANSITerminal.print_string [ ANSITerminal.red ]
       "\n\n\
        Unable to split. You must have a hand with two cards of the same rank \
-       from the initial deal. Please enter a different command.\n\n";
+       from the initial deal. \n\n";
     print_hands st;
     st
 
@@ -202,13 +202,19 @@ let split_prompt st =
 let surrender_prompt st =
   try
     let st' = surrender st in
-    ANSITerminal.print_string [ ANSITerminal.red ]
-      "\n\nYou have surrendered!\n\n";
+    ANSITerminal.print_string [ ANSITerminal.red ] "\nYou have surrendered!\n";
+    ANSITerminal.print_string [ ANSITerminal.magenta ]
+      "\n\
+       ################################################################################################\n\n";
+    ANSITerminal.print_string [ ANSITerminal.yellow ]
+      "Starting a new round...\n\n";
     incr losses;
     st' |> new_round_prompt
   with IllegalAction ->
     ANSITerminal.print_string [ ANSITerminal.red ]
-      "\n\nUnable to surrender. You must have a hand with two cards.\n\n";
+      "\n\n\
+       Unable to surrender. You have already taken an action for your current \
+       hand.\n\n";
     print_hands st;
     st
 
@@ -224,7 +230,7 @@ let dealer_end_prompt st =
       incr wins;
       ANSITerminal.print_string [ ANSITerminal.magenta ]
         "\n\
-         #################################################################################\n\n";
+         ################################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
       let st' = deposit st (current_bet st * 2) in
@@ -235,7 +241,7 @@ let dealer_end_prompt st =
       incr losses;
       ANSITerminal.print_string [ ANSITerminal.magenta ]
         "\n\
-         #################################################################################\n\n";
+         ################################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
       st
@@ -244,7 +250,7 @@ let dealer_end_prompt st =
         "\nYou've tied with the dealer. Nobody had the better hand.\n";
       ANSITerminal.print_string [ ANSITerminal.magenta ]
         "\n\
-         #################################################################################\n\n";
+         ################################################################################################\n\n";
       ANSITerminal.print_string [ ANSITerminal.yellow ]
         "Starting a new round...\n\n";
       let st' = deposit st (current_bet st) in
@@ -317,7 +323,8 @@ let rec main_prompt st =
       | Stand -> stand_prompt st |> main_prompt
       | Split -> split_prompt st |> main_prompt
       | Evaluate ->
-          print_endline (string_of_evaluation ());
+          ANSITerminal.print_string [ ANSITerminal.yellow ]
+            (string_of_evaluation () ^ "\n");
           main_prompt st
       | Surrender -> surrender_prompt st |> main_prompt
       | Double -> (

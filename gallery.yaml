@@ -22,13 +22,19 @@ demo-video-url: ""
 # Description of the project.
 desc: >
   Our project is an interactive single-player Blackjack game. It simulates a 
-  classic "no hole card", "non-soft 17" Blackjack game that supports traditional 
-  player decisions such as hitting, standing, doubling down, splitting, and
-  surrendering as well as a betting mechanism to create a thrilling risk/reward
-  experience.
+  Blackjack game with rules such as 4 to 8 playing decks, no "hole card" for the 
+  dealer, dealer hits until achieving a value of 17 or more, and a 2-1 Blackjack 
+  payout. 
   
-  The user interface of the Blackjack game is fully text-based, and players can
-  interact with the the interface by typing specific commands in the terminal.
-  The game also offers an assistance tool that suggests the recommended action
-  to take, which is based on statistics derived from the current game state as
-  well as widely known Blackjack strategies.
+  The game supports traditional player decisions such as hitting, standing, 
+  doubling down, splitting, and surrendering as well as a betting mechanism to 
+  create a thrilling risk/reward experience. The user interface of the Blackjack 
+  game is fully text-based, and players can interact with the the interface by 
+  typing specific commands in the terminal. The game also offers an evaluation 
+  tool that suggests the recommended action to take and the recommended betting 
+  size, which is based on popular Blackjack strategy charts and a HighLow card 
+  counting system.
+
+  We improve the odds against the dealer compared to traditional casino Blackjack 
+  odds to truly reward the player's skill. Do you have what it takes to beat the 
+  dealer?
