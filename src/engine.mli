@@ -1,22 +1,9 @@
-(** An engine for Blackjack strategies
+(** An engine for the evaluation of Blackjack game states
 
-    This module represents an engine that recommends the best moves for the
-    current Blackjack game state based on Blackjack strategy charts for 4 to
-    8-deck Blackjack games (dealer hits on Soft 17) and card counting
-    strategies. *)
-
-(** The type [move] represents a move in a Blackjack game the player can make. *)
-type move =
-  | Hit
-  | Stand
-  | Double
-  | Split
-  | Surrender
-
-type t
-(** The abstract type of values representing an evaluation of the game state,
-    consisting of information such as the best move, factor at which to bet,
-    number of cards/decks in the state, and card/true counts. *)
+    This module represents an engine that evaluates a Blackjack game state and
+    recommends the best move based on Blackjack strategy charts for 4 to 8-deck
+    Blackjack games (dealer hits on Soft 17) as well as the optimal betting
+    factor based on the HighLow card counting strategy. *)
 
 val update_evaluation_idle : State.t -> State.t
 (** [update_evaluation_idle st] updates the stored evaluation based on [st]. The

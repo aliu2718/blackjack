@@ -114,7 +114,7 @@ let rec bet_prompt st =
       | EmptyBalance -> emptybal_prompt ())
   | exception _ ->
       ANSITerminal.print_string [ ANSITerminal.red ]
-        "\nYou have entered an invalid value. Please try again.\n\n";
+        "\nYou have entered an invalid value. Please try again.\n";
       bet_prompt st
 
 (** [double_prompt st] prints a prompt for when the player doubles their bet. *)
@@ -272,7 +272,7 @@ let dealer_end_prompt st =
         "Starting a new round...\n";
       let st' = deposit st (current_bet st * 2) in
       st'
-  | _ -> raise (Failure "Unimplemented")
+  | _ -> raise (Failure "Unnecessary pattern match")
 
 (** [dealer_prompt st] is the new state resulting from the dealer playing. It
     also handles printing relevant information for the dealer's turn. *)
@@ -335,7 +335,7 @@ let stand_prompt st =
 (** [main_prompt st] handles the player's inputs and prints the appropriate
     prompts corresponding to the parsed inputs. *)
 let rec main_prompt st =
-  print_string "\nYour valid actions are: ";
+  print_string "\nValid commands are: ";
   ANSITerminal.print_string [ ANSITerminal.yellow ]
     "| hit | stand | split | double | surrender | evaluate | quit |\n";
   print_endline "What would you like to do?";
@@ -364,7 +364,7 @@ let rec main_prompt st =
               let st' = blackjack_prompt st in
               new_round_prompt st' |> main_prompt
           | ContinueRound -> main_prompt st'
-          | _ -> raise (Failure "Unimplemented"))
+          | _ -> raise (Failure "Unnecessary pattern match"))
       | Stand -> stand_prompt st |> main_prompt
       | Split -> split_prompt st |> main_prompt
       | Evaluate ->
@@ -389,8 +389,7 @@ let rec main_prompt st =
                   let st' = blackjack_prompt st in
                   new_round_prompt st' |> main_prompt
               | ContinueRound -> st' |> stand_prompt |> main_prompt
-              | _ -> raise (Failure "Unimplemented")))
-      | _ -> raise (Failure "Unimplemented")
+              | _ -> raise (Failure "Unnecessary pattern match")))
     end
 
 (** [main ()] starts a session of the Blackjack game. *)
@@ -403,7 +402,28 @@ let main () =
   let num_decks = deck_size session / 52 in
   ANSITerminal.print_string [ ANSITerminal.green ]
     ("Successfully loaded new Blackjack game with " ^ string_of_int num_decks
-   ^ " 52-card standard decks...\n\n\n");
+   ^ " 52-card standard decks...\n\n");
+  ANSITerminal.print_string [ ANSITerminal.yellow ]
+    "Exceptional Blackjack Rules\n";
+  print_endline
+    "For the basic rules of Blackjack, you can find many helpful resources \
+     online. \n\
+     However, here are several rules that may differ from traditional \
+     Blackjack game rules or are particularly noteworthy:";
+  print_endline
+    "1) The dealer hits and continues to hit the deck until they achieve a \
+     value of 17 or above, \n\
+     even if they have already beaten your hand value.";
+  print_endline "2) The dealer has no \"hole card\".";
+  print_endline "3) Blackjacks pay out at 2x your original bet.";
+  print_endline
+    "4) Surrendering pays back half your original bet, rounded down to the \
+     nearest integer.";
+  print_endline
+    "5) Once the deck runs out of cards, one standard 52-card deck is shuffled \
+     and added to the game. \n\
+     You will receive no visual prompt of this occuring unless you use the \
+     evaluation.";
   let session' = new_round_prompt session in
   main_prompt session'
 

@@ -1,4 +1,4 @@
-(** Representation of singular playing card.
+(** Representation of a playing card.
 
     This module represents a single playing card, including the rank, suit, and
     possible values of the card. *)

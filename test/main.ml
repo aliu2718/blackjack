@@ -97,7 +97,10 @@ let string_of_command (c : Command.command) : string =
   | Hit -> "Hit"
   | Stand -> "Stand"
   | Quit -> "Quit"
-  | _ -> failwith "Unimplemented Commands"
+  | Surrender -> "Surrender"
+  | Double -> "Double"
+  | Split -> "Split"
+  | Evaluate -> "Evaluate"
 
 (** [parse_test name str expected_output] constructs an OUnit test named [name]
     that asserts the quality of [expected_output] with [Command.parse str]. *)
@@ -117,6 +120,10 @@ let command_tests =
     parse_test "Hit" "hit" Hit;
     parse_test "Stand" "    stand" Stand;
     parse_test "Quit" "    quit      " Quit;
+    parse_test "Surrender" "surrender       " Surrender;
+    parse_test "Double" " double " Double;
+    parse_test "Split" "split" Split;
+    parse_test "Evaluate" " evaluate" Evaluate;
     parse_fail_test "empty string" "" Empty;
     parse_fail_test "command with extra characters" "hit abc" Malformed;
     parse_fail_test "invalid command" "draw" Malformed;

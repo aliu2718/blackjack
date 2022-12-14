@@ -21,7 +21,7 @@ git-repo: "https://github.coecis.cornell.edu/al849/blackjack"
 demo-video-url: ""
 # Description of the project.
 desc: >
-  Our project is an interactive single-player Blackjack game. It simulates a 
+  Our project is an interactive single-player Blackjack system. It simulates a 
   Blackjack game with rules such as 4 to 8 playing decks, no "hole card" for the 
   dealer, dealer hits until achieving a value of 17 or more, and a 2-1 Blackjack 
   payout. 

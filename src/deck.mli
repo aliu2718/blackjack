@@ -1,4 +1,4 @@
-(** Representation of playing card deck.
+(** Representation of a playing card deck.
 
     This module represents a deck of playing cards and handles operations for a
     deck including initialization, shuffling, peeking the top card, and drawing. *)
