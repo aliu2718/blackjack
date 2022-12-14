@@ -1,5 +1,67 @@
 (** Test file for Blackjack system. *)
 
+(** ########################### TEST PLAN ###################################
+
+    In evaluating the correctness of our blackjack system, we thoroughly tested
+    files from which our game state is heavily reliant with OUnit testing,
+    including those of card.ml, command.ml, deck.ml, and state.ml. In these
+    files, no information is directly displayed to the user like in bin/main.ml,
+    meaning that we can predictably test the outputs of the functions in the
+    aforementioned files. To do so, we utilized various implementations of
+    string conversion to test equality, as the data structures used for
+    implementation were abstracted away. This made operations somewhat more
+    difficult, as sometimes (like in state.ml testing), we could not compare
+    outputs directly. In this example, since outputs often corresponded to a
+    state of the game, we instead tested for certain properties that must hold
+    true within the state after performing a specific operation. Not only did
+    this help us guarantee the correctness of that individual function, but by
+    incorporating other functions, we can guarantee their correctness and thus
+    be confident that we do not need to test them further. An example of this
+    would be string conversion, as we used it to check correctness of other
+    implementations, and we would easily see (without testing the individual
+    string function) that it is also correct.
+
+    We utilized manual testing for the implementations of engine.ml and
+    bin/main.ml. First, the implementation of engine is such that if it made an
+    incorrect recommendation based on the state of the game, we could then take
+    the provided recommendation in the game and see if it is incorrect. We were
+    able to do this because we had pre-emptively tested the files containing
+    actions, commands, decks, et cetera. Thus, if we were given an incorrect
+    recommendation, the system would tell us that it's incorrect after we input
+    the information into the text prompt. This is the reason why we put a
+    significant amount of exception handlers in bin/main.ml in the case of the
+    user inputting incorrect information. Additionally, as much of the engine is
+    pattern matching card values with commands, it would be redundant to include
+    test cases for them, as we can guarantee the correctness of those functions
+    by way of the engine providing the corresponding recommendations in the text
+    interface. Lastly, it was not necessary to test bin/main.ml because the
+    outputs of each function will be displayed to the user throughout the game.
+    Thus, if we made a mistake in that file, that mistake would immediately
+    surface, and we would immediately notice it and isolate it in the file.
+
+    Largely, our OUnit test cases (spanning card.ml, command.ml, deck.ml, and
+    state.ml) were implemented using glass box testing. This is because,
+    especially in state.ml, we can not test for equality with random decks and
+    random drawing of cards. Thus, we had to create our own implementations of
+    decks of cards, and we had to understand how, for example, the splitting
+    mechanism worked in order to test for equality. In this case, we initalized
+    a deck of four cards where the user would be dealt two splittable cards;
+    then, we tested the resulting hands after splitting, converted to a string.
+    This required multiple helper functions, as the data structure was
+    abstracted away and we needed to test two entries in a tuple. Despite these
+    techniques, there were a significant amount of functions that could be
+    tested through black box testing, and it was largely in the more complex
+    functions where we had to dig deeper into the particular implementation.
+
+    We hope that the rationale above sufficiently explains our approach to
+    testing. Through a mixture of automated OUnit testing and interaction with
+    the text interface and command line, we were able to reliably guarantee
+    correctness for our blackjack system. We believe it was a pragmatic
+    approach, as if we had pursued automated testing for every aspect of the
+    system, it would quickly become cumbersome and moreover a project in itself.
+    By focusing on automated testing for the state-handling files and functions,
+    we could effectively test and debug the rest of the system. *)
+
 open OUnit2
 open Blackjack
 open Card
@@ -466,6 +528,178 @@ let deposit_tests =
     deposit_test "deposit from bet_state_2" bet_state_2 300 300;
   ]
 
+let custom_deck_1 = init_card Ace Spades [ 1; 11 ] |> add empty
+let custom_deck_2 = init_card (Number 2) Spades [ 2 ] |> add custom_deck_1
+let custom_deck_3 = init_card (Number 3) Spades [ 3 ] |> add custom_deck_2
+let custom_deck_4 = init_card (Number 4) Spades [ 4 ] |> add custom_deck_3
+let custom_deck_5 = init_card (Number 5) Spades [ 5 ] |> add custom_deck_4
+let custom_deck_6 = init_card (Number 6) Spades [ 6 ] |> add custom_deck_5
+let custom_deck_7 = init_card (Number 7) Spades [ 7 ] |> add custom_deck_6
+let custom_state = add_deck init_state custom_deck_7
+
+(** [hit_test name st expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with the balance of
+    [State.hit st]. *)
+let hit_test (name : string) (st : State.t) (expected_output : Card.t) : test =
+  name >:: fun _ -> assert_equal expected_output (hit st |> fst)
+
+let hit_tests =
+  [
+    hit_test "bet from custom state" custom_state
+      (init_card (Number 7) Spades [ 7 ]);
+    hit_test "bet from second custom state"
+      (add_deck init_state custom_deck_6)
+      (init_card (Number 6) Spades [ 6 ]);
+    hit_test "bet from custom state with only one card in deck"
+      (add_deck init_state custom_deck_1)
+      (init_card Ace Spades [ 1; 11 ]);
+  ]
+
+(** [current_hand_test st expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with the balance of
+    [State.current_hand st]. *)
+let current_hand_test (name : string) (st : State.t) (expected_output : State.h)
+    : test =
+  name >:: fun _ -> assert_equal expected_output (current_hand st)
+
+let current_hand_tests =
+  [
+    current_hand_test "Player hand" init_state empty_hand;
+    current_hand_test "Dealer hand" init_state empty_hand;
+  ]
+
+(** [is_doubleable_test h st expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with the balance of
+    [State.is_doubleable h st]. *)
+let is_doubleable_test (name : string) (h : State.h) (st : State.t)
+    (expected_output : bool) : test =
+  name >:: fun _ -> assert_equal expected_output (is_doubleable h st)
+
+let doubleable_state_1 = custom_state |> hit |> snd |> hit |> snd |> hit |> snd
+let doubleable_state_2 = custom_state |> hit |> snd |> hit |> snd
+
+let is_doubleable_tests =
+  [
+    is_doubleable_test "too many cards"
+      (player_hands doubleable_state_1 |> fst)
+      doubleable_state_1 false;
+    is_doubleable_test "not enough money"
+      (bet doubleable_state_1 (balance doubleable_state_1)
+      |> player_hands |> fst)
+      doubleable_state_1 false;
+    is_doubleable_test "two cards"
+      (player_hands doubleable_state_2 |> fst)
+      doubleable_state_2 true;
+    is_doubleable_test "enough money"
+      (bet doubleable_state_2 200 |> player_hands |> fst)
+      doubleable_state_2 true;
+  ]
+
+(** [double_test st expected_output] constructs an OUnit test named [name] that
+    asserts the quality of [expected_output] with the balance of
+    [State.double st]. *)
+let double_test (name : string) (st : State.t) (expected_output : int) : test =
+  name >:: fun _ -> assert_equal expected_output (double st |> balance)
+
+let double_tests =
+  [
+    double_test "doubling bet of 200 leaves 100 left from inital balance"
+      (bet doubleable_state_2 200)
+      100;
+  ]
+
+let split_card_1 = init_card (Number 4) Spades [ 4 ]
+let split_card_2 = init_card (Number 7) Spades [ 7 ]
+let split_card_3 = init_card (Number 2) Spades [ 2 ]
+let split_card_4 = init_card (Number 2) Hearts [ 2 ]
+let splittable_deck = split_card_1 |> add empty
+let splittable_deck' = split_card_2 |> add splittable_deck
+let splittable_deck'' = split_card_3 |> add splittable_deck'
+let splittable_deck''' = split_card_4 |> add splittable_deck''
+
+let splittable_state =
+  add_deck init_state splittable_deck''' |> hit |> snd |> hit |> snd
+
+let splittable_state' = add_deck init_state splittable_deck''' |> hit |> snd
+
+(** [is_splittable_test st expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with the balance of
+    [State.is_splittable st]. *)
+let is_splittable_test (name : string) (h : State.h) (st : State.t)
+    (expected_output : bool) : test =
+  name >:: fun _ -> assert_equal expected_output (is_splittable h st)
+
+let is_splittable_tests =
+  [
+    is_splittable_test "rank matches"
+      (bet splittable_state 200 |> player_hands |> fst)
+      splittable_state true;
+    is_splittable_test "impossible rank matching"
+      (bet splittable_state' 200 |> player_hands |> fst)
+      splittable_state' false;
+  ]
+
+(** [split_test_fst st expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with the balance of
+    [State.split st]. *)
+let split_test_fst (name : string) (st : State.t) (expected_output : string) :
+    test =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (split st |> player_hands |> fst |> string_of_hand)
+    ~printer:Fun.id
+
+(** [split_test_snd st expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with the balance of
+    [State.split st]. *)
+let split_test_snd (name : string) (st : State.t) (expected_output : string) :
+    test =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (split st |> player_hands |> snd |> string_of_hand)
+    ~printer:Fun.id
+
+let split_tests =
+  [
+    split_test_fst "first hand resulting from split" splittable_state
+      "2 of Hearts, 7 of Spades";
+    split_test_snd "second hand resulting from split" splittable_state
+      "2 of Spades, 4 of Spades";
+  ]
+
+(** [is_surrenderable_test st expected_output] constructs an OUnit test named
+    [name] that asserts the quality of [expected_output] with the balance of
+    [State.is_surrenderable st]. *)
+let is_surrenderable_test (name : string) (h : State.h) (st : State.t)
+    (expected_output : bool) : test =
+  name >:: fun _ -> assert_equal expected_output (is_surrenderable h st)
+
+let is_surrenderable_tests =
+  [
+    is_surrenderable_test "hand size is two"
+      (bet splittable_state 200 |> player_hands |> fst)
+      splittable_state true;
+    is_surrenderable_test "hand size is not two"
+      (bet splittable_state' 200 |> player_hands |> fst)
+      splittable_state' false;
+  ]
+
+(** [surrender_test st expected_output] constructs an OUnit test named [name]
+    that asserts the quality of [expected_output] with the balance of
+    [State.double st]. *)
+let surrender_test (name : string) (st : State.t) (expected_output : int) : test
+    =
+  name >:: fun _ ->
+  assert_equal expected_output (surrender st |> balance) ~printer:string_of_int
+
+let surrender_tests =
+  [
+    surrender_test "bet 200 from initial 500, surrender returns 100"
+      (bet splittable_state 200) 400;
+    surrender_test "bet 200 from initial 500, surrender returns 100"
+      (bet splittable_state 500) 250;
+  ]
+
 (** [val_hand_test name st d expected_output] constructs an OUnit test named
     [name] that asserts the quality of [expected_output] with
     [State.val_hand (State.current_hand st)]. *)
@@ -486,6 +720,14 @@ let state_tests =
       start_round_tests;
       bet_tests;
       deposit_tests;
+      hit_tests;
+      current_hand_tests;
+      is_doubleable_tests;
+      double_tests;
+      is_splittable_tests;
+      split_tests;
+      is_surrenderable_tests;
+      surrender_tests;
       val_hand_tests;
     ]
 
